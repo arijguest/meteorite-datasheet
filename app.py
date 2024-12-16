@@ -106,9 +106,8 @@ def process_data():
 
 def create_visualizations(df):
     # Common layout settings for consistent styling
-# Common layout settings for consistent styling
     common_layout = {
-        'showlegend': False,
+        'showlegend': True,  # Show legend to differentiate mass categories
         'paper_bgcolor': 'rgba(0,0,0,0)',
         'plot_bgcolor': 'rgba(0,0,0,0)',
         'margin': dict(t=30, b=0, l=0, r=0)
@@ -116,17 +115,27 @@ def create_visualizations(df):
 
     # Enhanced Radial plot
     class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
+
+    # Map class names to angles
+    classes = class_mass.index.tolist()
+    num_classes = len(classes)
+    angles = np.linspace(0, 360, num_classes, endpoint=False)  # Evenly spaced angles
+
+    class_angle_mapping = dict(zip(classes, angles))
+
     fig_radial = go.Figure()
     for mass_cat in class_mass.columns:
         fig_radial.add_trace(go.Barpolar(
             r=class_mass[mass_cat],
-            theta=class_mass.index,
+            theta=[class_angle_mapping[cls] for cls in class_mass.index],
             name=mass_cat,
             marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
             opacity=0.8,
-            hovertemplate="Class: %{theta}<br>Count: %{r}<br>Mass Category: %{customdata}<extra></extra>",
-            customdata=[mass_cat] * len(class_mass.index)
+            hovertemplate="Class: %{customdata[0]}<br>Count: %{r}<br>Mass Category: %{customdata[1]}<extra></extra>",
+            customdata=list(zip(class_mass.index, [mass_cat]*len(class_mass.index))),
+            thetaunit='degrees'
         ))
+        
     fig_radial.update_layout(
         template='plotly_dark',
         **common_layout,
