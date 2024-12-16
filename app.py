@@ -9,11 +9,9 @@ import numpy as np
 import gc
 import os
 
-# Get mapbox API key from environment variable
-os.environ.get('MAPBOX_ACCESS_TOKEN')
-
-# Set mapbox API key
-px.set_mapbox_access_token("MAPBOX_ACCESS_TOKEN")
+# Get mapbox API key from environment variable & set
+mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
+px.set_mapbox_access_token(mapbox_token)
 
 WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
