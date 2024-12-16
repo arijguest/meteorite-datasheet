@@ -198,7 +198,6 @@ def create_visualizations(df):
         lon=df['reclong'],
         radius=10,
         colorscale='Viridis',
-        hoverongaps=False,
         showscale=True
     ))
     fig_heatmap.update_layout(
