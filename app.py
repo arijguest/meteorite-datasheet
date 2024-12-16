@@ -5,9 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
-import gc
 from datetime import datetime
-import logging
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -222,8 +220,10 @@ def create_visualizations(df):
         'colors': list(COLORS.values())
     }
 
-    return map(lambda fig: fig.to_html(full_html=False, include_plotlyjs=True),
-              [fig_radial, fig_time, fig_map, fig_heatmap]), legend_data
+    # Convert figures to HTML and return as a list
+    html_figures = [fig.to_html(full_html=False, include_plotlyjs=True) for fig in [fig_radial, fig_time, fig_map, fig_heatmap]]
+
+    return html_figures, legend_data
 
 @app.route("/")
 def home():
@@ -231,6 +231,7 @@ def home():
     if df.empty:
         return "Unable to fetch meteorite data", 503
 
+    # Get the list of HTML figures and the legend data
     visualizations, legend_data = create_visualizations(df)
     radial_html, time_html, map_html, heatmap_html = visualizations
 
@@ -259,14 +260,14 @@ def home():
     )
 
     return render_template('layout.html',
-                         descriptions=METEORITE_DESCRIPTIONS,
-                         radial_html=radial_html,
-                         time_html=time_html,
-                         map_html=map_html,
-                         heatmap_html=heatmap_html,
-                         datasheet_html=datasheet_html,
-                         legend_data=legend_data,
-                         last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                           descriptions=METEORITE_DESCRIPTIONS,
+                           radial_html=radial_html,
+                           time_html=time_html,
+                           map_html=map_html,
+                           heatmap_html=heatmap_html,
+                           datasheet_html=datasheet_html,
+                           legend_data=legend_data,
+                           last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
