@@ -1,6 +1,4 @@
-# Meteorites Datasheet
-
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request
 import requests
 import pandas as pd
 import plotly.express as px
@@ -21,125 +19,66 @@ df["year"] = pd.to_datetime(df["year"], errors="coerce").dt.year
 df["reclat"] = pd.to_numeric(df["reclat"], errors="coerce")
 df["reclong"] = pd.to_numeric(df["reclong"], errors="coerce")
 
-# Flask route: Home with datasheet and key stats
+# Step 3: Clean and Group Similar Types
+fusion_map = {
+    'L-type': ['L', 'L4', 'L5', 'L6', 'L5/6', 'L4-6', 'L6/7', 'L~5', 'L~6', 'L3.0', 'L3.2', 'L3.4', 'L3.6', 'L3.7', 'L3.8', 'L3.9', 'L3.7-6', 'L3-4', 'L3-5', 'L3-6', 'L3-7', 'L3.9-6', 'L3.7-4', 'L3.0-3.9', 'L3.3-3.7', 'L3.3-3.5', 'L4/5'],
+    'H-type': ['H', 'H4', 'H5', 'H6', 'H5/6', 'H4-6', 'H3', 'H3.4', 'H3.5', 'H3.6', 'H3.7', 'H3.8', 'H3.9', 'H3-4', 'H3-5', 'H3-6', 'H3.7-6', 'H3.8-5', 'H3.9-5', 'H3.9/4', 'H4/5', 'H4-5', 'H~4', 'H~5', 'H~6'],
+    'LL-type': ['LL', 'LL4', 'LL5', 'LL6', 'LL7', 'LL3', 'LL3.2', 'LL3.4', 'LL3.6', 'LL3.8', 'LL3.9', 'LL4-5', 'LL4-6', 'LL5-6', 'LL5/6', 'LL3-4', 'LL3-5', 'LL3-6', 'LL3.8-6', 'LL3.1-3.5'],
+    'Carbonaceous': ['CI1', 'CM1', 'CM2', 'CR2', 'CO3', 'CO3.2', 'CO3.3', 'CO3.4', 'CO3.5', 'CO3.6', 'CV3', 'CK4', 'CK5', 'CK6', 'CK3', 'CM-an', 'CV3-an'],
+    'Enstatite': ['EH', 'EH3', 'EH4', 'EH5', 'EH6', 'EH7-an', 'EL3', 'EL4', 'EL5', 'EL6', 'EL7', 'EH3/4-an'],
+    'Achondrite': ['Howardite', 'Eucrite', 'Diogenite', 'Angrite', 'Aubrite', 'Acapulcoite', 'Ureilite', 'Winonaite', 'Brachinite', 'Lodranite'],
+    'Iron': ['Iron', 'Iron?', 'Iron, IAB', 'Iron, IAB-MG', 'Iron, IAB-ung', 'Iron, IIAB', 'Iron, IIE', 'Iron, IIIAB', 'Iron, IVA', 'Iron, IVB', 'Iron, IID', 'Iron, IIC', 'Iron, IC', 'Iron, IC-an'],
+    'Mesosiderite': ['Mesosiderite', 'Mesosiderite-A1', 'Mesosiderite-A3', 'Mesosiderite-B', 'Mesosiderite-C', 'Mesosiderite-an'],
+    'Martian': ['Martian (shergottite)', 'Martian (chassignite)', 'Martian (nakhlite)', 'Martian (basaltic breccia)', 'Martian'],
+    'Lunar': ['Lunar', 'Lunar (anorth)', 'Lunar (gabbro)', 'Lunar (norite)', 'Lunar (basalt)', 'Lunar (bas. breccia)', 'Lunar (feldsp. breccia)'],
+    'Pallasite': ['Pallasite', 'Pallasite, PMG', 'Pallasite, PMG-an', 'Pallasite, ungrouped'],
+    'Unknown': ['Unknown', 'Stone-uncl', 'Chondrite-ung'],
+}
+flattened_map = {subtype: group for group, subtypes in fusion_map.items() for subtype in subtypes}
+df['recclass_clean'] = df['recclass'].map(flattened_map).fillna('Unknown')
+meteorite_counts = df['recclass_clean'].value_counts()
+
 @app.route("/")
 def home():
-    # Summary of meteorite classes
-    class_summary = df["recclass"].value_counts().head(10).to_frame().reset_index()
-    class_summary.columns = ["Meteorite Class", "Count"]
+    # Radial chart of cleaned categories
+    class_summary = df['recclass_clean'].value_counts().reset_index()
+    class_summary.columns = ['Class', 'Count']
+    fig_radial = px.pie(class_summary, values='Count', names='Class', title="Meteorite Class Distribution")
+    radial_html = fig_radial.to_html(full_html=False)
 
-    # Summary stats
-    total_meteorites = len(df)
-    avg_mass = df["mass"].mean()
-    earliest = int(df["year"].min())
-    latest = int(df["year"].max())
-
-    # Datasheet
-    datasheet_html = df.to_html(index=False, classes="table table-hover table-striped")
+    # Datasheet with cleaned class
+    datasheet_html = df[["name", "recclass", "recclass_clean", "mass", "year", "reclat", "reclong"]].to_html(index=False, classes="table table-hover table-striped")
 
     return render_template_string(f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Meteorite Datasheet</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+        <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
         <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f9f9f9;
-            }}
-            h1, h2 {{
-                text-align: center;
-                color: #333;
-            }}
-            .container {{
-                max-width: 1200px;
-                margin: auto;
-                padding: 20px;
-                background-color: #fff;
-                border-radius: 8px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }}
-            .table {{
-                width: 100%;
-                border-collapse: collapse;
-            }}
-            .table th, .table td {{
-                border: 1px solid #ddd;
-                padding: 8px;
-            }}
-            .table th {{
-                background-color: #4CAF50;
-                color: white;
-                text-align: left;
-            }}
+            .container {{ margin: 20px; }}
         </style>
     </head>
     <body>
-        <h1>Meteorite Datasheet and Statistics</h1>
         <div class="container">
-            <h2>Key Statistics</h2>
-            <ul>
-                <li>Total Meteorites: {total_meteorites}</li>
-                <li>Average Mass: {avg_mass:.2f} grams</li>
-                <li>Earliest Recorded Fall: {earliest}</li>
-                <li>Most Recent Recorded Fall: {latest}</li>
-            </ul>
-            <h2>Top 10 Meteorite Classes</h2>
-            {class_summary.to_html(index=False, classes="table table-hover table-striped")}
-            <h2>Datasheet</h2>
-            {datasheet_html}
+            <h1>Meteorite Datasheet</h1>
+            <h3>Class Distribution</h3>
+            <div>{radial_html}</div>
+            <h3>Searchable Datasheet</h3>
+            <table id="meteoriteTable" class="table table-hover table-striped">{datasheet_html}</table>
         </div>
+        <script>
+            $(document).ready(function() {{
+                $('#meteoriteTable').DataTable();
+            }});
+        </script>
     </body>
     </html>
     """)
 
-# Flask route: Interactive plots
-@app.route("/graphs")
-def graphs():
-    # Mass distribution
-    fig1 = px.histogram(df, x="mass", log_y=True, nbins=50, title="Mass Distribution of Meteorites", labels={"mass": "Mass (g)"})
-    fig1_html = fig1.to_html(full_html=False)
-
-    # Temporal trend
-    year_grouped = df.groupby("year").size().reset_index(name="count")
-    fig2 = px.line(year_grouped, x="year", y="count", title="Number of Meteorites by Year", labels={"year": "Year", "count": "Meteorite Count"})
-    fig2_html = fig2.to_html(full_html=False)
-
-    # Geographic heatmap
-    fig3 = px.density_mapbox(df, lat="reclat", lon="reclong", z="mass", radius=10, mapbox_style="stamen-terrain",
-                             title="Geographic Distribution of Meteorites", labels={"mass": "Mass (g)"})
-    fig3.update_layout(mapbox_center={"lat": 0, "lon": 0}, mapbox_zoom=1)
-    fig3_html = fig3.to_html(full_html=False)
-
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Meteorite Interactive Graphs</title>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    </head>
-    <body>
-        <h1>Meteorite Interactive Graphs</h1>
-        <div>
-            <h2>Mass Distribution</h2>
-            {fig1_html}
-        </div>
-        <div>
-            <h2>Temporal Trend</h2>
-            {fig2_html}
-        </div>
-        <div>
-            <h2>Geographic Heatmap</h2>
-            {fig3_html}
-        </div>
-    </body>
-    </html>
-    """
-
-# Run Flask app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
