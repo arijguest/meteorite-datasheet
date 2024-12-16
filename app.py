@@ -7,6 +7,7 @@ import numpy as np
 import os
 import gc
 from datetime import datetime
+import logging
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -87,17 +88,23 @@ def process_data():
         response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json", timeout=10)
         df = pd.DataFrame(response.json())
         
+        # Enhanced data processing
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
         df['recclass_clean'] = df['recclass'].apply(classify_meteorite)
         
+        # Remove rows with NaN values in critical columns
         df = df.dropna(subset=['mass', 'reclat', 'reclong'])
         
+        # Create mass categories with more intuitive labels
         mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)', 
                       'Large (1-10kg)', 'Massive (>10kg)']
         df['mass_category'] = pd.qcut(df['mass'], q=5, labels=mass_labels)
+        
+        # Add century classification
+        df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
         
         return df
     except Exception as e:
@@ -105,40 +112,20 @@ def process_data():
         return pd.DataFrame()
 
 def create_visualizations(df):
-    # Common layout settings for consistent styling
-    common_layout = {
-        'showlegend': True,  # Show legend to differentiate mass categories
-        'paper_bgcolor': 'rgba(0,0,0,0)',
-        'plot_bgcolor': 'rgba(0,0,0,0)',
-        'margin': dict(t=30, b=0, l=0, r=0)
-    }
-
     # Enhanced Radial plot
     class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
-
-    # Map class names to angles
-    classes = class_mass.index.tolist()
-    num_classes = len(classes)
-    angles = np.linspace(0, 360, num_classes, endpoint=False)  # Evenly spaced angles
-
-    class_angle_mapping = dict(zip(classes, angles))
-
     fig_radial = go.Figure()
     for mass_cat in class_mass.columns:
         fig_radial.add_trace(go.Barpolar(
             r=class_mass[mass_cat],
-            theta=[class_angle_mapping[cls] for cls in class_mass.index],
+            theta=class_mass.index,
             name=mass_cat,
             marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
-            opacity=0.8,
-            hovertemplate="Class: %{customdata[0]}<br>Count: %{r}<br>Mass Category: %{customdata[1]}<extra></extra>",
-            customdata=list(zip(class_mass.index, [mass_cat]*len(class_mass.index))),
-            thetaunit='degrees'
+            opacity=0.8
         ))
-        
     fig_radial.update_layout(
-        template='plotly_dark',
-        **common_layout,
+        title="Distribution of Meteorite Classes by Mass Category",
+        template="plotly_dark",
         polar=dict(
             radialaxis=dict(
                 type="log",
@@ -150,6 +137,14 @@ def create_visualizations(df):
                 gridcolor="#444",
                 linecolor="#444"
             )
+        ),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
         )
     )
 
@@ -158,22 +153,20 @@ def create_visualizations(df):
         df,
         x="year",
         color="recclass_clean",
+        title="Historical Timeline of Meteorite Discoveries",
         color_discrete_map=COLORS,
-        labels={
-            "year": "Year of Discovery",
-            "count": "Number of Meteorites",
-            "recclass_clean": "Classification"
-        },
+        labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
         opacity=0.8
     )
     fig_time.update_layout(
-        template='plotly_dark',
-        **common_layout,
+        template="plotly_dark",
+        showlegend=True,
+        legend_title="Meteorite Class",
         xaxis_title="Year of Discovery",
         yaxis_title="Number of Meteorites"
     )
 
-    # Enhanced Global map with complete world view
+    # Enhanced Global map
     size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
     fig_map = px.scatter_mapbox(
         df,
@@ -183,58 +176,40 @@ def create_visualizations(df):
         size=size_scale,
         hover_name='name',
         hover_data={
-            'mass': ':,.2f g | Mass',
-            'year': '| Discovery Year',
-            'recclass_clean': False,
-            'fall': '| Fall Type'
+            'mass': ':,.2f g',
+            'year': True,
+            'recclass_clean': 'Classification',
+            'fall': True
         },
         color_discrete_map=COLORS,
-        zoom=0,
-        center=dict(lat=0, lon=0),
-        opacity=0.7
+        zoom=1,
+        title="Global Distribution of Meteorite Landings"
     )
     fig_map.update_layout(
-        template='plotly_dark',
-        **common_layout,
-        mapbox=dict(
-            style="carto-darkmatter",
-            zoom=0,
-            center=dict(lat=0, lon=0)
-        ),
-        height=600,
-        margin=dict(t=0, b=0, l=0, r=0)
+        mapbox_style="carto-darkmatter",
+        height=800,
+        margin={"r":0,"t":50,"l":0,"b":0},
+        legend_title="Meteorite Class"
     )
 
-    # Enhanced Heatmap with complete world view
+    # Enhanced Heatmap
     fig_heatmap = go.Figure(data=go.Densitymapbox(
         lat=df['reclat'],
         lon=df['reclong'],
-        radius=20,
+        radius=10,
         colorscale='Viridis',
-        showscale=True,
-        hovertemplate="Latitude: %{lat:.2f}°<br>Longitude: %{lon:.2f}°<br>Density: %{z}<extra></extra>"
+        showscale=True
     ))
     fig_heatmap.update_layout(
-        **common_layout,
-        mapbox=dict(
-            style="carto-darkmatter",
-            zoom=0,
-            center=dict(lat=0, lon=0)
-        ),
+        mapbox_style="carto-darkmatter",
+        mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
         height=600,
-        margin=dict(t=0, b=0, l=0, r=0)
+        margin={"r":0,"t":50,"l":0,"b":0},
+        title="Global Concentration of Meteorite Discoveries"
     )
 
-    # Generate common legend data
-    legend_data = {
-        'classes': list(COLORS.keys()),
-        'colors': list(COLORS.values())
-    }
-
-    # Convert figures to HTML and return as a list
-    html_figures = [fig.to_html(full_html=False, include_plotlyjs=True) for fig in [fig_radial, fig_time, fig_map, fig_heatmap]]
-
-    return html_figures, legend_data
+    return map(lambda fig: fig.to_html(full_html=False),
+              [fig_radial, fig_time, fig_map, fig_heatmap])
 
 @app.route("/")
 def home():
@@ -242,22 +217,23 @@ def home():
     if df.empty:
         return "Unable to fetch meteorite data", 503
 
-    # Get the list of HTML figures and the legend data
-    visualizations, legend_data = create_visualizations(df)
+    visualizations = create_visualizations(df)
     radial_html, time_html, map_html, heatmap_html = visualizations
 
+    # Enhanced data formatting
     df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
     df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
     
+    # Rename columns for display
     display_columns = {
-        "name": "Name",
+        "name": "Meteorite Name",
         "recclass": "Scientific Classification",
-        "recclass_clean": "Class",
+        "recclass_clean": "Main Class",
         "mass_formatted": "Mass",
-        "year_formatted": "Year",
+        "year_formatted": "Discovery Year",
         "reclat": "Latitude",
         "reclong": "Longitude",
-        "fall": "Fall Type"
+        "fall": "Fall Type",
     }
     
     df_display = df[list(display_columns.keys())].copy()
@@ -277,7 +253,6 @@ def home():
                          map_html=map_html,
                          heatmap_html=heatmap_html,
                          datasheet_html=datasheet_html,
-                         legend_data=legend_data,
                          last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 if __name__ == "__main__":
