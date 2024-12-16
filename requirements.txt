@@ -4,4 +4,3 @@ plotly==5.3.1
 requests==2.26.0
 numpy==1.21.2
 werkzeug==2.0.1
-mapbox

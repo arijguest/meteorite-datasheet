@@ -7,6 +7,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import gc
+import os
+
+# Get mapbox API key from environment variable
+os.environ.get('MAPBOX_ACCESS_TOKEN')
+
+# Set mapbox API key
+px.set_mapbox_access_token("MAPBOX_ACCESS_TOKEN")
 
 WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
