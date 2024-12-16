@@ -124,7 +124,7 @@ def process_data():
 
 def create_visualizations(df):
     try:
-        # Enhanced Radial plot
+        # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
         fig_radial = go.Figure()
         for mass_cat in class_mass.columns:
@@ -138,6 +138,7 @@ def create_visualizations(df):
         fig_radial.update_layout(
             title=None,
             template="plotly_dark",
+            showlegend=True,
             polar=dict(
                 radialaxis=dict(
                     type="log",
@@ -168,6 +169,7 @@ def create_visualizations(df):
             plot_bgcolor='rgba(0,0,0,0)',
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites",
+            showlegend=False,
             xaxis=dict( range=[1700, datetime.now().year]
             )
         )
