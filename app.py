@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 import requests
 import pandas as pd
 import plotly.express as px
@@ -8,9 +8,15 @@ import os
 import gc
 from datetime import datetime
 import logging
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Initialize Flask app
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Set up Mapbox
 mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
@@ -50,6 +56,10 @@ METEORITE_DESCRIPTIONS = {
     'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
 }
 
+@app.before_request
+def before_request():
+    gc.collect()
+
 def classify_meteorite(recclass):
     if pd.isna(recclass):
         return 'Unknown'
@@ -86,9 +96,10 @@ def classify_meteorite(recclass):
 def process_data():
     try:
         response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json", timeout=10)
+        response.raise_for_status()
         df = pd.DataFrame(response.json())
         
-        # Enhanced data processing
+        # Enhanced data processing with error handling
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
@@ -108,152 +119,164 @@ def process_data():
         
         return df
     except Exception as e:
-        print(f"Error processing data: {e}")
+        logger.error(f"Error processing data: {e}")
         return pd.DataFrame()
 
 def create_visualizations(df):
-    # Enhanced Radial plot
-    class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
-    fig_radial = go.Figure()
-    for mass_cat in class_mass.columns:
-        fig_radial.add_trace(go.Barpolar(
-            r=class_mass[mass_cat],
-            theta=class_mass.index,
-            name=mass_cat,
-            marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
-            opacity=0.8
-        ))
-    fig_radial.update_layout(
-        title="Distribution of Meteorite Classes by Mass Category",
-        template="plotly_dark",
-        polar=dict(
-            radialaxis=dict(
-                type="log",
-                title="Number of Specimens",
-                gridcolor="#444",
-                linecolor="#444"
+    try:
+        # Enhanced Radial plot
+        class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
+        fig_radial = go.Figure()
+        for mass_cat in class_mass.columns:
+            fig_radial.add_trace(go.Barpolar(
+                r=class_mass[mass_cat],
+                theta=class_mass.index,
+                name=mass_cat,
+                marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
+                opacity=0.8
+            ))
+        fig_radial.update_layout(
+            title="Distribution of Meteorite Classes by Mass Category",
+            template="plotly_dark",
+            polar=dict(
+                radialaxis=dict(
+                    type="log",
+                    title="Number of Specimens",
+                    gridcolor="#444",
+                    linecolor="#444"
+                ),
+                angularaxis=dict(
+                    gridcolor="#444",
+                    linecolor="#444"
+                )
             ),
-            angularaxis=dict(
-                gridcolor="#444",
-                linecolor="#444"
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
             )
-        ),
-        showlegend=True,
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
         )
-    )
+        radial_html = fig_radial.to_html(full_html=False, include_plotlyjs=False, div_id='radial')
 
-    # Enhanced Time distribution
-    fig_time = px.histogram(
-        df,
-        x="year",
-        color="recclass_clean",
-        title="Historical Timeline of Meteorite Discoveries",
-        color_discrete_map=COLORS,
-        labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
-        opacity=0.8
-    )
-    fig_time.update_layout(
-        template="plotly_dark",
-        showlegend=True,
-        legend_title="Meteorite Class",
-        xaxis_title="Year of Discovery",
-        yaxis_title="Number of Meteorites"
-    )
+        # Enhanced Time distribution
+        fig_time = px.histogram(
+            df,
+            x="year",
+            color="recclass_clean",
+            title="Historical Timeline of Meteorite Discoveries",
+            color_discrete_map=COLORS,
+            labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
+            opacity=0.8
+        )
+        fig_time.update_layout(
+            template="plotly_dark",
+            showlegend=True,
+            legend_title="Meteorite Class",
+            xaxis_title="Year of Discovery",
+            yaxis_title="Number of Meteorites"
+        )
+        time_html = fig_time.to_html(full_html=False, include_plotlyjs=False, div_id='time')
 
-    # Enhanced Global map
-    size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
-    fig_map = px.scatter_mapbox(
-        df,
-        lat='reclat',
-        lon='reclong',
-        color='recclass_clean',
-        size=size_scale,
-        hover_name='name',
-        hover_data={
-            'mass': ':,.2f g',
-            'year': True,
-            'recclass_clean': 'Classification',
-            'fall': True
-        },
-        color_discrete_map=COLORS,
-        zoom=1,
-        title="Global Distribution of Meteorite Landings"
-    )
-    fig_map.update_layout(
-        mapbox_style="carto-darkmatter",
-        height=800,
-        margin={"r":0,"t":50,"l":0,"b":0},
-        legend_title="Meteorite Class"
-    )
+        # Enhanced Global map
+        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
+        fig_map = px.scatter_mapbox(
+            df,
+            lat='reclat',
+            lon='reclong',
+            color='recclass_clean',
+            size=size_scale,
+            hover_name='name',
+            hover_data={
+                'mass': ':.2f g',
+                'year': True,
+                'recclass_clean': 'Classification',
+                'fall': True
+            },
+            color_discrete_map=COLORS,
+            zoom=1,
+            title="Global Distribution of Meteorite Landings"
+        )
+        fig_map.update_layout(
+            mapbox_style="carto-darkmatter",
+            height=800,
+            margin={"r":0,"t":50,"l":0,"b":0},
+            legend_title="Meteorite Class"
+        )
+        map_html = fig_map.to_html(full_html=False, include_plotlyjs=False, div_id='map')
 
-    # Enhanced Heatmap
-    fig_heatmap = go.Figure(data=go.Densitymapbox(
-        lat=df['reclat'],
-        lon=df['reclong'],
-        radius=10,
-        colorscale='Viridis',
-        showscale=True
-    ))
-    fig_heatmap.update_layout(
-        mapbox_style="carto-darkmatter",
-        mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
-        height=600,
-        margin={"r":0,"t":50,"l":0,"b":0},
-        title="Global Concentration of Meteorite Discoveries"
-    )
+        # Enhanced Heatmap
+        fig_heatmap = go.Figure(data=go.Densitymapbox(
+            lat=df['reclat'],
+            lon=df['reclong'],
+            radius=10,
+            colorscale='Viridis',
+            showscale=True
+        ))
+        fig_heatmap.update_layout(
+            mapbox_style="carto-darkmatter",
+            mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
+            height=600,
+            margin={"r":0,"t":50,"l":0,"b":0},
+            title="Global Concentration of Meteorite Discoveries"
+        )
+        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs=False, div_id='heatmap')
 
-    return map(lambda fig: fig.to_html(full_html=False),
-              [fig_radial, fig_time, fig_map, fig_heatmap])
+        return radial_html, time_html, map_html, heatmap_html
+
+    except Exception as e:
+        logger.error(f"Error creating visualizations: {e}")
+        return '', '', '', ''
 
 @app.route("/")
 def home():
-    df = process_data()
-    if df.empty:
-        return "Unable to fetch meteorite data", 503
+    try:
+        df = process_data()
+        if df.empty:
+            return "Unable to fetch meteorite data", 503
 
-    visualizations = create_visualizations(df)
-    radial_html, time_html, map_html, heatmap_html = visualizations
+        visualizations = create_visualizations(df)
+        radial_html, time_html, map_html, heatmap_html = visualizations
 
-    # Enhanced data formatting
-    df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
-    df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
-    
-    # Rename columns for display
-    display_columns = {
-        "name": "Meteorite Name",
-        "recclass": "Scientific Classification",
-        "recclass_clean": "Main Class",
-        "mass_formatted": "Mass",
-        "year_formatted": "Discovery Year",
-        "reclat": "Latitude",
-        "reclong": "Longitude",
-        "fall": "Fall Type",
-    }
-    
-    df_display = df[list(display_columns.keys())].copy()
-    df_display.columns = list(display_columns.values())
-    
-    datasheet_html = df_display.to_html(
-        index=False,
-        classes="table table-dark table-hover display",
-        table_id="meteoriteTable",
-        escape=False
-    )
+        # Enhanced data formatting
+        df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
+        df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
+        
+        # Rename columns for display
+        display_columns = {
+            "name": "Meteorite Name",
+            "recclass": "Classification",
+            "recclass_clean": "Group Class",
+            "mass_formatted": "Mass",
+            "year_formatted": "Discovered",
+            "reclat": "Latitude",
+            "reclong": "Longitude",
+            "fall": "Find/Fall",
+        }
+        
+        df_display = df[list(display_columns.keys())].copy()
+        df_display.columns = list(display_columns.values())
+        
+        datasheet_html = df_display.to_html(
+            index=False,
+            classes="table table-dark table-hover display",
+            table_id="meteoriteTable",
+            escape=False
+        )
 
-    return render_template('layout.html',
-                         descriptions=METEORITE_DESCRIPTIONS,
-                         radial_html=radial_html,
-                         time_html=time_html,
-                         map_html=map_html,
-                         heatmap_html=heatmap_html,
-                         datasheet_html=datasheet_html,
-                         last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        return render_template('layout.html',
+                             descriptions=METEORITE_DESCRIPTIONS,
+                             radial_html=radial_html,
+                             time_html=time_html,
+                             map_html=map_html,
+                             heatmap_html=heatmap_html,
+                             datasheet_html=datasheet_html,
+                             last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    except Exception as e:
+        logger.error(f"Error in home route: {e}")
+        return "An error occurred while processing the request", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

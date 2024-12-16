@@ -39,10 +39,12 @@ body {
 .description-table table {
     border-collapse: separate;
     border-spacing: 0 8px;
+    width: 100%;
 }
 
-.description-table tr {
-    transition: background-color 0.3s ease;
+.description-table th, .description-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
 }
 
 .description-table tr:hover {
@@ -267,5 +269,51 @@ table.dataTable tbody tr:hover td {
 
     .map-container {
         height: 400px;
+    }
+}
+
+/* Fix for DataTable responsiveness */
+table.dataTable {
+    width: 100% !important;
+}
+
+/* Adjustments for meteorite-datasheet */
+table#meteoriteTable {
+    width: 100% !important;
+}
+
+table#meteoriteTable thead th {
+    white-space: nowrap;
+}
+
+table#meteoriteTable tbody td {
+    white-space: nowrap;
+}
+
+/* Fix for buttons alignment */
+.dt-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.dt-buttons .dt-button {
+    margin: 5px;
+}
+
+/* Adjust table responsiveness */
+@media (max-width: 576px) {
+    .dataTables_wrapper .dataTables_filter {
+        float: none;
+        text-align: center;
+    }
+
+    .dataTables_wrapper .dataTables_length {
+        float: none;
+        text-align: center;
+    }
+
+    .dt-buttons {
+        justify-content: center;
     }
 }
