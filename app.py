@@ -173,7 +173,7 @@ def create_visualizations(df):
         fig_time.update_layout(
             template="plotly_dark",
             paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            plot_bgcolor='rgba(0,0,0,0)',
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites"
         )
