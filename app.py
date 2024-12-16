@@ -194,16 +194,16 @@ def create_visualizations(df):
                 'recclass_clean': 'Classification',
                 'fall': True
             },
-            color_discrete_map=COLORS,
-            zoom=1,
+            color_discrete_map=COLORS
         )
         fig_map.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
                 center=dict(lat=0, lon=0),
-                zoom=0.6
+                zoom=0.5
             ),
             paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             height=800,
             margin={"r":0,"t":50,"l":0,"b":0},
             showlegend=False,
@@ -216,19 +216,19 @@ def create_visualizations(df):
             lat=df['reclat'],
             lon=df['reclong'],
             radius=10,
-            colorscale='Viridis',
-            showscale=True
+            colorscale='Viridis'
         ))
         fig_heatmap.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
                 center=dict(lat=0, lon=0),
-                zoom=0.6  # Adjusted zoom level to show full world map
+                zoom=0.5  # Adjusted zoom level to show full world map
             ),
             paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             height=600,
             margin={"r":0,"t":50,"l":0,"b":0},
-            showlegend=False,
+            showlegend=False
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
 
