@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string
 import requests
 import pandas as pd
 import plotly.express as px
@@ -36,25 +36,38 @@ fusion_map = {
 }
 flattened_map = {subtype: group for group, subtypes in fusion_map.items() for subtype in subtypes}
 df['recclass_clean'] = df['recclass'].map(flattened_map).fillna('Unknown')
-meteorite_counts = df['recclass_clean'].value_counts()
+
+# Create Visualizations
+# Radial Chart for Class Distribution
+class_summary = df['recclass_clean'].value_counts().reset_index()
+class_summary.columns = ['Class', 'Count']
+fig_radial = px.pie(class_summary, values='Count', names='Class', title="Meteorite Class Distribution")
+
+# Time Distribution of Meteorite Falls
+fig_time = px.histogram(df, x="year", nbins=50, title="Meteorite Falls Over Time")
+
+# Global Coverage Map
+fig_map = px.scatter_geo(
+    df,
+    lat='reclat',
+    lon='reclong',
+    color='recclass_clean',
+    hover_name='name',
+    title="Global Distribution of Meteorite Falls"
+)
 
 @app.route("/")
 def home():
-    # Radial chart of cleaned categories
-    class_summary = df['recclass_clean'].value_counts().reset_index()
-    class_summary.columns = ['Class', 'Count']
-    fig_radial = px.pie(class_summary, values='Count', names='Class', title="Meteorite Class Distribution")
     radial_html = fig_radial.to_html(full_html=False)
-
-    # Datasheet with cleaned class
+    time_html = fig_time.to_html(full_html=False)
+    map_html = fig_map.to_html(full_html=False)
     datasheet_html = df[["name", "recclass", "recclass_clean", "mass", "year", "reclat", "reclong"]].to_html(index=False, classes="table table-hover table-striped")
-
     return render_template_string(f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Meteorite Datasheet</title>
+        <title>Meteorite Analysis</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
         <script src="https://cdn.jsdelivr.net/npm/jquery"></script>
         <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
@@ -65,10 +78,14 @@ def home():
     </head>
     <body>
         <div class="container">
-            <h1>Meteorite Datasheet</h1>
-            <h3>Class Distribution</h3>
+            <h1>Meteorite Data Analysis</h1>
+            <h3>Radial Chart: Meteorite Class Distribution</h3>
             <div>{radial_html}</div>
-            <h3>Searchable Datasheet</h3>
+            <h3>Time Distribution of Meteorite Falls</h3>
+            <div>{time_html}</div>
+            <h3>Global Distribution of Meteorites</h3>
+            <div>{map_html}</div>
+            <h3>Searchable Meteorite Datasheet</h3>
             <table id="meteoriteTable" class="table table-hover table-striped">{datasheet_html}</table>
         </div>
         <script>
