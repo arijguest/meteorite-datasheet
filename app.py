@@ -104,16 +104,14 @@ def process_data():
         return pd.DataFrame()
 
 def create_visualizations(df):
-    # Common figure template for consistent styling
-    template = dict(
-        layout=dict(
-            template="plotly_dark",
-            showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(t=30, b=0, l=0, r=0)
-        )
-    )
+    # Common layout settings for consistent styling
+    common_layout = {
+        'template': 'plotly_dark',
+        'showlegend': False,
+        'paper_bgcolor': 'rgba(0,0,0,0)',
+        'plot_bgcolor': 'rgba(0,0,0,0)',
+        'margin': dict(t=30, b=0, l=0, r=0)
+    }
 
     # Enhanced Radial plot
     class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
@@ -129,7 +127,7 @@ def create_visualizations(df):
             customdata=[mass_cat] * len(class_mass.index)
         ))
     fig_radial.update_layout(
-        template=template["layout"],
+        **common_layout,
         polar=dict(
             radialaxis=dict(
                 type="log",
@@ -158,7 +156,7 @@ def create_visualizations(df):
         opacity=0.8
     )
     fig_time.update_layout(
-        template=template["layout"],
+        **common_layout,
         xaxis_title="Year of Discovery",
         yaxis_title="Number of Meteorites"
     )
@@ -184,7 +182,7 @@ def create_visualizations(df):
         opacity=0.7
     )
     fig_map.update_layout(
-        template=template["layout"],
+        **common_layout,
         mapbox=dict(
             style="carto-darkmatter",
             zoom=0,
@@ -204,7 +202,7 @@ def create_visualizations(df):
         hovertemplate="Latitude: %{lat:.2f}°<br>Longitude: %{lon:.2f}°<br>Density: %{z}<extra></extra>"
     ))
     fig_heatmap.update_layout(
-        template=template["layout"],
+        **common_layout,
         mapbox=dict(
             style="carto-darkmatter",
             zoom=0,
@@ -260,14 +258,14 @@ def home():
     )
 
     return render_template('layout.html',
-                           descriptions=METEORITE_DESCRIPTIONS,
-                           radial_html=radial_html,
-                           time_html=time_html,
-                           map_html=map_html,
-                           heatmap_html=heatmap_html,
-                           datasheet_html=datasheet_html,
-                           legend_data=legend_data,
-                           last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                         descriptions=METEORITE_DESCRIPTIONS,
+                         radial_html=radial_html,
+                         time_html=time_html,
+                         map_html=map_html,
+                         heatmap_html=heatmap_html,
+                         datasheet_html=datasheet_html,
+                         legend_data=legend_data,
+                         last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
