@@ -107,8 +107,6 @@ def process_data():
 def create_visualizations(df):
     # Common layout settings for consistent styling
     common_layout = {
-        'template': 'plotly_dark',
-        'showlegend': False,
         'paper_bgcolor': 'rgba(0,0,0,0)',
         'plot_bgcolor': 'rgba(0,0,0,0)',
         'margin': dict(t=30, b=0, l=0, r=0)
@@ -128,6 +126,7 @@ def create_visualizations(df):
             customdata=[mass_cat] * len(class_mass.index)
         ))
     fig_radial.update_layout(
+        template='plotly_dark',
         **common_layout,
         polar=dict(
             radialaxis=dict(
