@@ -63,6 +63,8 @@ fusion_map = {
     'Unknown': ['Unknown', 'Stone-uncl', 'Chondrite-ung']
 }
 
+flattened_map = {subtype: group for group, subtypes in fusion_map.items() for subtype in subtypes}
+
 def classify_meteorite(recclass):
     for category, classes in fusion_map.items():
         if recclass in classes:
