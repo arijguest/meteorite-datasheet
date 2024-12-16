@@ -143,7 +143,39 @@ $(document).ready(() => {
     } catch (error) {
         ErrorHandler.handleError(error, 'Application Initialization');
     }
+    generateCommonLegend();
 });
+
+// Generate Common Legend
+function generateCommonLegend() {
+    const COLORS = {
+        'L-type': '#FF6B6B',
+        'H-type': '#4ECDC4',
+        'LL-type': '#45B7D1',
+        'Carbonaceous': '#96CEB4',
+        'Enstatite': '#FFEEAD',
+        'Achondrite': '#D4A5A5',
+        'Iron': '#9A8C98',
+        'Mesosiderite': '#C9ADA7',
+        'Martian': '#F08080',
+        'Lunar': '#87CEEB',
+        'Pallasite': '#DDA0DD',
+        'Unknown': '#808080',
+        'Other': '#FFFFFF'
+    };
+
+    const legendContainer = $('#commonLegend');
+
+    for (const [classification, color] of Object.entries(COLORS)) {
+        const legendItem = $(`
+            <div class="legend-item">
+                <div class="legend-color-box" style="background-color: ${color};"></div>
+                <span>${classification}</span>
+            </div>
+        `);
+        legendContainer.append(legendItem);
+    }
+}
 
 // Export functionality for testing
 if (typeof module !== 'undefined' && module.exports) {

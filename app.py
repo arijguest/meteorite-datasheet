@@ -136,7 +136,7 @@ def create_visualizations(df):
                 opacity=0.8
             ))
         fig_radial.update_layout(
-            title="Distribution of Meteorite Classes by Mass Category",
+            title=None,
             template="plotly_dark",
             polar=dict(
                 radialaxis=dict(
@@ -166,17 +166,16 @@ def create_visualizations(df):
             df,
             x="year",
             color="recclass_clean",
-            title="Historical Timeline of Meteorite Discoveries",
             color_discrete_map=COLORS,
-            labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
+            labels={"year": "Discovery", "count": "No. of Meteorites"},
             opacity=0.8
         )
         fig_time.update_layout(
             template="plotly_dark",
-            showlegend=True,
-            legend_title="Meteorite Class",
-            xaxis_title="Year of Discovery",
-            yaxis_title="Number of Meteorites"
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgbs(0,0,0,0)'
+            xaxis_title="Discovered",
+            yaxis_title="No. of Meteorites"
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
@@ -197,13 +196,18 @@ def create_visualizations(df):
             },
             color_discrete_map=COLORS,
             zoom=1,
-            title="Global Distribution of Meteorite Landings"
         )
         fig_map.update_layout(
-            mapbox_style="carto-darkmatter",
+            mapbox=dict(
+                style="carto-darkmatter",
+                center=dict(lat=0, lon=0),
+                zoom=0.6
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
             height=800,
             margin={"r":0,"t":50,"l":0,"b":0},
-            legend_title="Meteorite Class"
+            showlegend=False,
+            title=None
         )
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
 
@@ -216,11 +220,15 @@ def create_visualizations(df):
             showscale=True
         ))
         fig_heatmap.update_layout(
-            mapbox_style="carto-darkmatter",
-            mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
+            mapbox=dict(
+                style="carto-darkmatter",
+                center=dict(lat=0, lon=0),
+                zoom=0.6  # Adjusted zoom level to show full world map
+            ),
+            paper_bgcolor='rgba(0,0,0,0)',
             height=600,
             margin={"r":0,"t":50,"l":0,"b":0},
-            title="Global Concentration of Meteorite Discoveries"
+            showlegend=False,
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
 
