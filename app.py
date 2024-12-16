@@ -106,7 +106,9 @@ def process_data():
 
 def create_visualizations(df):
     # Common layout settings for consistent styling
+# Common layout settings for consistent styling
     common_layout = {
+        'showlegend': False,
         'paper_bgcolor': 'rgba(0,0,0,0)',
         'plot_bgcolor': 'rgba(0,0,0,0)',
         'margin': dict(t=30, b=0, l=0, r=0)
@@ -156,6 +158,7 @@ def create_visualizations(df):
         opacity=0.8
     )
     fig_time.update_layout(
+        template='plotly_dark',
         **common_layout,
         xaxis_title="Year of Discovery",
         yaxis_title="Number of Meteorites"
@@ -182,6 +185,7 @@ def create_visualizations(df):
         opacity=0.7
     )
     fig_map.update_layout(
+        template='plotly_dark',
         **common_layout,
         mapbox=dict(
             style="carto-darkmatter",
