@@ -3,32 +3,17 @@ import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 import os
-import logging
 
-# Enhanced logging setup
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-# Initialize Flask app with debug mode
+# Initialize Flask app
 app = Flask(__name__)
-app.config['DEBUG'] = True
-
-@app.errorhandler(500)
-def handle_500(error):
-    logger.error(f'Server error: {error}', exc_info=True)
-    return "Server error encountered. Please try again later.", 500
-
-@app.errorhandler(Exception)
-def handle_exception(error):
-    logger.error(f'Unhandled exception: {error}', exc_info=True)
-    return "An unexpected error occurred.", 500
 
 # Set up Mapbox
-mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN', '')  # Fallback to empty string if not set
+mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
 px.set_mapbox_access_token(mapbox_token)
 
-# Color and description dictionaries remain unchanged
+# Color scheme
 COLORS = {
     'L-type': '#FF6B6B', 'H-type': '#4ECDC4', 'LL-type': '#45B7D1',
     'Carbonaceous': '#96CEB4', 'Enstatite': '#FFEEAD', 'Achondrite': '#D4A5A5',
@@ -56,7 +41,7 @@ METEORITE_DESCRIPTIONS = {
 def classify_meteorite(recclass):
     if pd.isna(recclass):
         return 'Unknown'
-        
+    
     recclass = str(recclass).strip()
     
     if recclass.startswith('L'):
@@ -91,16 +76,22 @@ def process_data():
         response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json", timeout=10)
         df = pd.DataFrame(response.json())
         
-        # Basic data processing
+        # Clean and process data
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
         df['recclass_clean'] = df['recclass'].apply(classify_meteorite)
-        df['mass_category'] = pd.qcut(df['mass'].dropna(), q=5, labels=['Very Small', 'Small', 'Medium', 'Large', 'Very Large'])
+        
+        # Remove rows with NaN values in critical columns
+        df = df.dropna(subset=['mass', 'reclat', 'reclong'])
+        
+        # Create mass categories after removing NaN values
+        df['mass_category'] = pd.qcut(df['mass'], q=5, labels=['Very Small', 'Small', 'Medium', 'Large', 'Very Large'])
         
         return df
-    except:
+    except Exception as e:
+        print(f"Error processing data: {e}")
         return pd.DataFrame()
 
 def create_visualizations(df):
@@ -125,10 +116,19 @@ def create_visualizations(df):
                            title="Temporal Distribution of Meteorite Falls",
                            color_discrete_map=COLORS)
 
-    # Global map
-    fig_map = px.scatter_mapbox(df, lat='reclat', lon='reclong',
-                               color='recclass_clean', size='mass',
+    # Global map with size scaling
+    size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)  # Log scale for better visualization
+    fig_map = px.scatter_mapbox(df, 
+                               lat='reclat', 
+                               lon='reclong',
+                               color='recclass_clean',
+                               size=size_scale,
                                hover_name='name',
+                               hover_data={
+                                   'mass': True,
+                                   'year': True,
+                                   'recclass': True
+                               },
                                color_discrete_map=COLORS,
                                zoom=1)
     fig_map.update_layout(
@@ -139,8 +139,10 @@ def create_visualizations(df):
 
     # Heatmap
     fig_heatmap = go.Figure(data=go.Densitymapbox(
-        lat=df['reclat'], lon=df['reclong'],
-        radius=5, colorscale='Viridis'
+        lat=df['reclat'],
+        lon=df['reclong'],
+        radius=5,
+        colorscale='Viridis'
     ))
     fig_heatmap.update_layout(
         mapbox_style="carto-darkmatter",
