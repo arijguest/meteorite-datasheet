@@ -54,25 +54,37 @@ METEORITE_DESCRIPTIONS = {
 }
 
 def classify_meteorite(recclass):
-    classification_map = {
-        'L-type': ['L', 'L4', 'L5', 'L6', 'L5/6', 'L4-6', 'L6/7', 'L~5', 'L~6', 'L3.0', 'L3.2', 'L3.4', 'L3.6', 'L3.7', 'L3.8', 'L3.9', 'L3.7-6', 'L3-4', 'L3-5', 'L3-6', 'L3-7', 'L3.9-6', 'L3.7-4', 'L3.0-3.9', 'L3.3-3.7', 'L3.3-3.5', 'L4/5'],
-        'H-type': ['H', 'H4', 'H5', 'H6', 'H5/6', 'H4-6', 'H3', 'H3.4', 'H3.5', 'H3.6', 'H3.7', 'H3.8', 'H3.9', 'H3-4', 'H3-5', 'H3-6', 'H3.7-6', 'H3.8-5', 'H3.9-5', 'H3.9/4', 'H4/5', 'H4-5', 'H~4', 'H~5', 'H~6'],
-        'LL-type': ['LL', 'LL4', 'LL5', 'LL6', 'LL7', 'LL3', 'LL3.2', 'LL3.4', 'LL3.6', 'LL3.8', 'LL3.9', 'LL4-5', 'LL4-6', 'LL5-6', 'LL5/6', 'LL3-4', 'LL3-5', 'LL3-6', 'LL3.8-6', 'LL3.1-3.5'],
-        'Carbonaceous': ['CI1', 'CM1', 'CM2', 'CR2', 'CO3', 'CO3.2', 'CO3.3', 'CO3.4', 'CO3.5', 'CO3.6', 'CV3', 'CK4', 'CK5', 'CK6', 'CK3', 'CM-an', 'CV3-an'],
-        'Enstatite': ['EH', 'EH3', 'EH4', 'EH5', 'EH6', 'EH7-an', 'EL3', 'EL4', 'EL5', 'EL6', 'EL7', 'EH3/4-an'],
-        'Achondrite': ['Howardite', 'Eucrite', 'Diogenite', 'Angrite', 'Aubrite', 'Acapulcoite', 'Ureilite', 'Winonaite', 'Brachinite', 'Lodranite'],
-        'Iron': ['Iron', 'Iron?', 'Iron, IAB', 'Iron, IAB-MG', 'Iron, IAB-ung', 'Iron, IIAB', 'Iron, IIE', 'Iron, IIIAB', 'Iron, IVA', 'Iron, IVB', 'Iron, IID', 'Iron, IIC', 'Iron, IC', 'Iron, IC-an'],
-        'Mesosiderite': ['Mesosiderite', 'Mesosiderite-A1', 'Mesosiderite-A3', 'Mesosiderite-B', 'Mesosiderite-C', 'Mesosiderite-an'],
-        'Martian': ['Martian (shergottite)', 'Martian (chassignite)', 'Martian (nakhlite)', 'Martian (basaltic breccia)', 'Martian'],
-        'Lunar': ['Lunar', 'Lunar (anorth)', 'Lunar (gabbro)', 'Lunar (norite)', 'Lunar (basalt)', 'Lunar (bas. breccia)', 'Lunar (feldsp. breccia)'],
-        'Pallasite': ['Pallasite', 'Pallasite, PMG', 'Pallasite, PMG-an', 'Pallasite, ungrouped'],
-        'Unknown': ['Unknown', 'Stone-uncl', 'Chondrite-ung']
-    }
+    if pd.isna(recclass):
+        return 'Unknown'
+        
+    recclass = str(recclass).strip()
     
-    for key, value in classification_map.items():
-        if str(recclass).startswith(key):
-            return value
-    return 'Other'
+    if recclass.startswith('L'):
+        return 'L-type'
+    elif recclass.startswith('H'):
+        return 'H-type'
+    elif recclass.startswith('LL'):
+        return 'LL-type'
+    elif recclass.startswith(('CI', 'CM', 'CR', 'CO', 'CV', 'CK')):
+        return 'Carbonaceous'
+    elif recclass.startswith(('EH', 'EL')):
+        return 'Enstatite'
+    elif recclass.startswith(('Iron', 'IAB', 'IC', 'IID', 'IIE', 'IIF', 'IIG', 'IIIAB', 'IVA', 'IVB')):
+        return 'Iron'
+    elif recclass.startswith('Mesosiderite'):
+        return 'Mesosiderite'
+    elif recclass.startswith('Martian'):
+        return 'Martian'
+    elif recclass.startswith('Lunar'):
+        return 'Lunar'
+    elif recclass.startswith('Pallasite'):
+        return 'Pallasite'
+    elif recclass.startswith(('Howardite', 'Eucrite', 'Diogenite', 'Angrite', 'Aubrite', 'Ureilite')):
+        return 'Achondrite'
+    elif recclass in ('Unknown', 'Stone-uncl', 'Chondrite-ung'):
+        return 'Unknown'
+    else:
+        return 'Other'
 
 def process_data():
     try:
