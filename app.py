@@ -4,9 +4,25 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import os
+import logging
 
-# Initialize Flask app
+# Enhanced logging setup
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Initialize Flask app with debug mode
 app = Flask(__name__)
+app.config['DEBUG'] = True
+
+@app.errorhandler(500)
+def handle_500(error):
+    logger.error(f'Server error: {error}', exc_info=True)
+    return "Server error encountered. Please try again later.", 500
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    logger.error(f'Unhandled exception: {error}', exc_info=True)
+    return "An unexpected error occurred.", 500
 
 # Set up Mapbox
 mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN', '')  # Fallback to empty string if not set
