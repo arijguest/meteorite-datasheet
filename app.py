@@ -95,7 +95,7 @@ def classify_meteorite(recclass):
 
 def process_data():
     try:
-        response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json", timeout=10)
+        response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json?$limit=50000", timeout=10)
         response.raise_for_status()
         df = pd.DataFrame(response.json())
         
