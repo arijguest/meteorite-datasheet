@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
-import gc
+gc
 from datetime import datetime
 import logging
 
@@ -103,9 +103,6 @@ def process_data():
                       'Large (1-10kg)', 'Massive (>10kg)']
         df['mass_category'] = pd.qcut(df['mass'], q=5, labels=mass_labels)
         
-        # Add century classification
-        df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
-        
         return df
     except Exception as e:
         print(f"Error processing data: {e}")
@@ -121,7 +118,9 @@ def create_visualizations(df):
             theta=class_mass.index,
             name=mass_cat,
             marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
-            opacity=0.8
+            opacity=0.8,
+            hovertemplate="Classification: %{theta}<br>Count: %{r}<br>Mass Category: %{customdata}<extra></extra>",
+            customdata=[mass_cat] * len(class_mass.index)
         ))
     fig_radial.update_layout(
         title="Distribution of Meteorite Classes by Mass Category",
@@ -155,7 +154,11 @@ def create_visualizations(df):
         color="recclass_clean",
         title="Historical Timeline of Meteorite Discoveries",
         color_discrete_map=COLORS,
-        labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
+        labels={
+            "year": "Year of Discovery",
+            "count": "Number of Meteorites",
+            "recclass_clean": "Classification"
+        },
         opacity=0.8
     )
     fig_time.update_layout(
@@ -178,7 +181,7 @@ def create_visualizations(df):
         hover_data={
             'mass': ':,.2f g | Mass',
             'year': '| Discovery Year',
-            'recclass_clean': '| Classification',
+            'recclass_clean': False,
             'fall': '| Fall Type'
         },
         labels={
@@ -199,7 +202,8 @@ def create_visualizations(df):
         lon=df['reclong'],
         radius=10,
         colorscale='Viridis',
-        showscale=True
+        showscale=True,
+        hovertemplate="Latitude: %{lat}<br>Longitude: %{lon}<br>Concentration: %{z}<extra></extra>"
     ))
     fig_heatmap.update_layout(
         mapbox_style="carto-darkmatter",
@@ -209,7 +213,7 @@ def create_visualizations(df):
         title="Global Concentration of Meteorite Discoveries"
     )
 
-    return map(lambda fig: fig.to_html(full_html=False),
+    return map(lambda fig: fig.to_html(full_html=False, include_plotlyjs=True),
               [fig_radial, fig_time, fig_map, fig_heatmap])
 
 @app.route("/")
@@ -225,7 +229,7 @@ def home():
     df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
     df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
     
-    # Rename columns for display
+    # Rename columns for display and remove nametype
     display_columns = {
         "name": "Meteorite Name",
         "recclass": "Scientific Classification",
@@ -234,8 +238,7 @@ def home():
         "year_formatted": "Discovery Year",
         "reclat": "Latitude",
         "reclong": "Longitude",
-        "fall": "Fall Type",
-        "nametype": "Name Type"
+        "fall": "Fall Type"
     }
     
     df_display = df[list(display_columns.keys())].copy()

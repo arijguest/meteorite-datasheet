@@ -179,38 +179,12 @@
                         last: '<i class="fas fa-angle-double-right"></i>',
                         next: '<i class="fas fa-angle-right"></i>',
                         previous: '<i class="fas fa-angle-left"></i>'
-                    }
+                    },
+                    zeroRecords: "No matching meteorites found",
+                    emptyTable: "No meteorite data available"
                 },
-
-                initComplete: function () {
-                    // Add custom filtering capability
-                    this.api().columns().every(function () {
-                        let column = this;
-                        let title = column.header().textContent;
-                        
-                        // Create the filter input
-                        let input = document.createElement('input');
-                        input.placeholder = `Filter ${title}`;
-                        input.className = 'form-control form-control-sm column-filter';
-                        
-                        // Prevent immediate filtering
-                        $(input).on('click', function(e) {
-                            e.stopPropagation();
-                        });
-                        
-                        // Add delay to filtering
-                        let timeoutId = null;
-                        $(input).on('keyup change', function() {
-                            clearTimeout(timeoutId);
-                            timeoutId = setTimeout(function() {
-                                if (column.search() !== this.value) {
-                                    column.search(this.value).draw();
-                                }
-                            }.bind(this), 500);
-                        });
-                        
-                        $(column.header()).append(input);
-                    });
+                drawCallback: function() {
+                    $('.paginate_button').addClass('btn btn-sm');
                 }
             });
 

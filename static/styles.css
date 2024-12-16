@@ -56,7 +56,7 @@ body {
     overflow: hidden;
 }
 
-/* DataTables Enhancement */
+/* Enhanced DataTables Styling */
 .dataTables_wrapper {
     padding: 25px;
     background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
@@ -65,33 +65,48 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* Enhanced Table Navigation */
-.dataTables_length {
-    margin-bottom: 15px;
-}
-
+/* Pagination Controls */
 .dataTables_paginate {
-    margin-top: 15px !important;
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #444;
 }
 
-.dataTables_info {
-    padding-top: 15px !important;
-    color: #ccc !important;
+.paginate_button {
+    padding: 8px 16px !important;
+    margin: 0 4px !important;
+    border-radius: 8px !important;
+    background: #333 !important;
+    color: #fff !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+}
+
+.paginate_button:hover {
+    background: #4ECDC4 !important;
+    color: #fff !important;
+}
+
+.paginate_button.current {
+    background: #4ECDC4 !important;
+    color: #fff !important;
 }
 
 /* Enhanced Table Search */
 .dataTables_filter {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    width: 100%;
 }
 
 .dataTables_filter input {
+    width: 100% !important;
     background: #2d2d2d !important;
     border: 2px solid #4ECDC4 !important;
     color: white !important;
-    padding: 8px 15px !important;
+    padding: 12px 20px !important;
     border-radius: 8px !important;
-    width: 300px !important;
     transition: all 0.3s ease;
+    margin-left: 0 !important;
 }
 
 .dataTables_filter input:focus {
@@ -100,117 +115,62 @@ body {
     outline: none;
 }
 
-/* Pagination Styling */
-.page-item.active .page-link {
-    background-color: #4ECDC4;
-    border-color: #4ECDC4;
+.dataTables_filter label {
+    width: 100%;
+    color: #ccc !important;
 }
 
-.page-link {
-    background-color: #333;
-    color: white;
-    border: 1px solid #444;
-    transition: all 0.3s ease;
+/* Length Menu Styling */
+.dataTables_length {
+    margin-bottom: 20px;
 }
 
-.page-link:hover {
-    background-color: #4ECDC4;
-    color: white;
+.dataTables_length select {
+    background: #2d2d2d !important;
+    border: 2px solid #4ECDC4 !important;
+    color: white !important;
+    padding: 8px 15px !important;
+    border-radius: 8px !important;
+    margin: 0 10px;
 }
 
-/* Button Styling */
+/* Table Header and Cells */
+table.dataTable thead th {
+    background-color: #2d2d2d;
+    color: #4ECDC4;
+    padding: 15px !important;
+    border-bottom: 2px solid #4ECDC4 !important;
+}
+
+table.dataTable tbody td {
+    padding: 12px 15px !important;
+    border-bottom: 1px solid #333 !important;
+}
+
+/* Export Buttons */
+.dt-buttons {
+    margin-bottom: 20px;
+}
+
 .dt-button {
     background: linear-gradient(145deg, #333, #444) !important;
     color: white !important;
     border: none !important;
     border-radius: 8px !important;
-    padding: 8px 20px !important;
+    padding: 10px 20px !important;
     margin: 5px !important;
     transition: all 0.3s ease !important;
-    text-transform: uppercase;
-    font-size: 0.9em;
-    letter-spacing: 0.5px;
 }
 
 .dt-button:hover {
     background: linear-gradient(145deg, #4ECDC4, #45B7D1) !important;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
 }
 
-/* Table Styling */
-table.dataTable tbody tr {
-    background-color: #1a1a1a;
-    color: white;
-    transition: background-color 0.3s ease;
-}
-
-table.dataTable tbody tr:hover {
-    background-color: #2d2d2d;
-}
-
-/* Info and Length Controls */
-.dataTables_info, 
-.dataTables_length select, 
-.dataTables_length label {
-    color: white !important;
-}
-
-.dataTables_length select {
-    background-color: #333 !important;
-    color: white !important;
-    border: 2px solid #444 !important;
-    border-radius: 8px;
-    padding: 5px 10px;
-}
-
-/* Dashboard Title */
-.dashboard-title {
-    text-align: center;
-    padding: 30px;
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-    border-radius: 15px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.dashboard-title h1 {
-    font-size: 2.5em;
-    font-weight: 700;
-    margin-bottom: 10px;
-    background: linear-gradient(45deg, #4ECDC4, #45B7D1);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.dashboard-title .lead {
-    font-size: 1.2em;
-    color: #ccc;
-}
-
-/* Section Titles */
-.section-title {
-    color: #4ECDC4;
-    margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 1.5em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Plot Styling */
-.plotly-graph-div {
-    margin: auto;
-    transition: all 0.3s ease;
-}
-
-/* Last Updated Info */
-.last-updated {
-    text-align: center;
-    color: #666;
-    font-size: 0.9em;
-    margin-top: 20px;
-    font-style: italic;
+/* Info Display */
+.dataTables_info {
+    color: #ccc !important;
+    padding-top: 15px !important;
 }
 
 /* Loading Animation */
@@ -256,6 +216,12 @@ table.dataTable tbody tr:hover {
     }
     
     .dataTables_filter input {
-        width: 100%;
+        width: 100% !important;
+    }
+    
+    .dt-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }
