@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Meteorite Analysis Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="dashboard-title">
+            <h1>🌠 Global Meteorite Analysis Dashboard</h1>
+            <p class="lead">Comprehensive analysis of meteorite landings across Earth</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 chart-container">
+                <h3 class="section-title">Class Distribution & Mass Analysis</h3>
+                {{radial_html|safe}}
+            </div>
+            <div class="col-md-6 chart-container">
+                <h3 class="section-title">Historical Timeline</h3>
+                {{time_html|safe}}
+            </div>
+        </div>
+        
+        <div class="chart-container map-container">
+            <h3 class="section-title">Interactive Global Distribution Map</h3>
+            {{map_html|safe}}
+        </div>
+
+        <div class="chart-container">
+            <h3 class="section-title">Global Heatmap of Meteorite Landings</h3>
+            {{heatmap_html|safe}}
+        </div>
+        
+        <div class="description-table">
+            <h3 class="section-title">Meteorite Classification Guide</h3>
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Scientific Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for class, description in descriptions.items() %}
+                    <tr>
+                        <td>{{class}}</td>
+                        <td>{{description}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h3 class="section-title">Comprehensive Meteorite Database</h3>
+            {{datasheet_html|safe}}
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#meteoriteTable').DataTable({
+                dom: 'Bfrtip',
+                pageLength: 25,
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+                order: [[3, 'desc']],
+                searchPanes: {
+                    viewTotal: true
+                },
+                columnDefs: [
+                    {
+                        targets: [2, 6, 7],
+                        searchable: true,
+                        visible: true
+                    }
+                ],
+                initComplete: function () {
+                    this.api().columns().every(function () {
+                        let column = this;
+                        let title = column.header().textContent;
+                        
+                        let input = document.createElement('input');
+                        input.placeholder = title;
+                        input.className = 'form-control form-control-sm';
+                        
+                        $(input)
+                            .appendTo($(column.header()))
+                            .on('keyup change', function () {
+                                if (column.search() !== this.value) {
+                                    column
+                                        .search(this.value)
+                                        .draw();
+                                }
+                            });
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
