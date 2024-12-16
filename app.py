@@ -5,7 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
+import gc
 from datetime import datetime
+import logging
 
 # Initialize Flask app
 app = Flask(__name__)
