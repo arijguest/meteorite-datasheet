@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
-gc
+import gc
 from datetime import datetime
 import logging
 
