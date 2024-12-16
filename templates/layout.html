@@ -50,6 +50,14 @@
                 </div>
             </div>
         </div>
+
+        <!-- Common Legend Section -->
+        <div class="common-legend chart-container">
+            <h3 class="section-title"><i class="fas fa-palette"></i> Meteorite Classification Legend</h3>
+            <div id="commonLegend" class="legend-container">
+                <!-- Legend content will be populated via JavaScript -->
+            </div>
+        </div>
         
         <!-- Arrange charts in two rows -->
         <div class="row">
@@ -69,7 +77,7 @@
             </div>
         </div>
         
-        <!-- Ensure maps are the same size and show the entire world -->
+        <!-- Map containers with enhanced sizing -->
         <div class="row">
             <div class="col-lg-6 col-md-12 chart-container map-container">
                 <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Global Impact Distribution</h3>
@@ -87,7 +95,7 @@
             </div>
         </div>
         
-        <!-- Move classification guide above the table -->
+        <!-- Classification guide -->
         <div class="description-table">
             <h3 class="section-title"><i class="fas fa-book"></i> Meteorite Classification Guide</h3>
             <div class="table-responsive">
@@ -110,7 +118,7 @@
             </div>
         </div>
 
-        <!-- Place the database table directly after the charts -->
+        <!-- Database table with enhanced search positioning -->
         <div class="chart-container">
             <h3 class="section-title"><i class="fas fa-table"></i> Comprehensive Meteorite Database</h3>
             <div class="table-description">
@@ -124,7 +132,7 @@
         </div>
     </div>
     
-    <!-- Updated script order and versions -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
@@ -141,9 +149,9 @@
             // Hide loading screen when page is ready
             $('.loading').fadeOut();
             
-            // Initialize DataTable with enhanced features
+            // Initialize DataTable with enhanced features and repositioned search
             $('#meteoriteTable').DataTable({
-                dom: '<"row"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"l><"col-md-6"p>>',
+                dom: '<"top"<"row"<"col-md-6"f><"col-md-6"B>>>rt<"bottom"<"row"<"col-md-6"l><"col-md-6"p>>>',
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
                 buttons: [
@@ -188,30 +196,24 @@
                     },
                     zeroRecords: "No matching meteorites found",
                     emptyTable: "No meteorite data available"
-                },
-                drawCallback: function() {
-                    $('.paginate_button').addClass('btn btn-sm');
                 }
             });
 
-            // Adjust Plotly maps to show the entire world
+            // Function to ensure maps show complete world view
             function adjustMapViews() {
                 const mapConfig = {
-                    mapbox: {
-                        center: { lat: 0, lon: 0 },
-                        zoom: 1
-                    }
+                    'mapbox.zoom': 1,
+                    'mapbox.center.lat': 0,
+                    'mapbox.center.lon': 0,
+                    'mapbox.style': 'carto-darkmatter'
                 };
 
-                // Update the Impact Distribution Map
                 Plotly.relayout('map', mapConfig);
-
-                // Update the Heatmap
                 Plotly.relayout('heatmap', mapConfig);
             }
 
-            // Call the function after a slight delay to ensure plots are loaded
-            setTimeout(adjustMapViews, 500);
+            // Adjust maps after a delay to ensure they're loaded
+            setTimeout(adjustMapViews, 1000);
 
             // Add smooth scrolling
             $('a[href*="#"]').on('click', function(e) {
