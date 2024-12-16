@@ -168,7 +168,8 @@ def create_visualizations(df):
             plot_bgcolor='rgba(0,0,0,0)',
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites",
-            xaxis=dict( range=[1700, datetime.now().year])
+            xaxis=dict( range=[1700, datetime.now().year]
+            )
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
