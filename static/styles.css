@@ -1,83 +1,243 @@
+/* Modern Dark Theme with Enhanced UI */
 body { 
-    background-color: #1a1a1a; 
+    background-color: #121212; 
     color: #ffffff; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
 }
-.container-fluid { padding: 20px; }
+
+.container-fluid { 
+    padding: 20px;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* Enhanced Chart Containers */
 .chart-container { 
     margin-bottom: 30px; 
-    background-color: #2d2d2d; 
-    padding: 20px; 
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+.chart-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Description Table Styling */
 .description-table { 
-    background-color: #2d2d2d; 
-    border-radius: 10px; 
-    padding: 20px;
+    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+    border-radius: 15px;
+    padding: 25px;
     margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
-.map-container { height: 800px; }
+
+.description-table table {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.description-table tr {
+    transition: background-color 0.3s ease;
+}
+
+.description-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Map Container */
+.map-container { 
+    height: 800px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* DataTables Enhancement */
 .dataTables_wrapper {
-    padding: 20px;
-    background-color: #2d2d2d;
-    border-radius: 10px;
-    margin-top: 20px;
+    padding: 25px;
+    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+    border-radius: 15px;
+    margin-top: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
+
+/* Search Input Styling */
 .dataTables_filter input {
-    background-color: #404040 !important;
+    background-color: #333 !important;
     color: white !important;
-    border: 1px solid #666 !important;
-    border-radius: 4px;
+    border: 2px solid #444 !important;
+    border-radius: 8px;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+    width: 250px;
+}
+
+.dataTables_filter input:focus {
+    border-color: #666 !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+/* Pagination Styling */
+.page-item.active .page-link {
+    background-color: #4ECDC4;
+    border-color: #4ECDC4;
+}
+
+.page-link {
+    background-color: #333;
+    color: white;
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #4ECDC4;
+    color: white;
+}
+
+/* Button Styling */
+.dt-button {
+    background: linear-gradient(145deg, #333, #444) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 20px !important;
+    margin: 5px !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+.dt-button:hover {
+    background: linear-gradient(145deg, #4ECDC4, #45B7D1) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+}
+
+/* Table Styling */
+table.dataTable tbody tr {
+    background-color: #1a1a1a;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #2d2d2d;
+}
+
+/* Info and Length Controls */
+.dataTables_info, 
+.dataTables_length select, 
+.dataTables_length label {
+    color: white !important;
+}
+
+.dataTables_length select {
+    background-color: #333 !important;
+    color: white !important;
+    border: 2px solid #444 !important;
+    border-radius: 8px;
     padding: 5px 10px;
 }
-.page-item.active .page-link {
-    background-color: #666;
-    border-color: #666;
-}
-.page-link {
-    background-color: #404040;
-    color: white;
-}
-.dt-button {
-    background-color: #404040 !important;
-    color: white !important;
-    border: 1px solid #666 !important;
-    border-radius: 4px !important;
-    padding: 5px 15px !important;
-    margin: 5px !important;
-}
-.dt-button:hover {
-    background-color: #666 !important;
-}
-table.dataTable tbody tr {
-    background-color: #2d2d2d;
-    color: white;
-}
-table.dataTable tbody tr:hover {
-    background-color: #404040;
-}
-.dataTables_info, .dataTables_length select, .dataTables_length label {
-    color: white !important;
-}
-.dataTables_length select {
-    background-color: #404040 !important;
-    color: white !important;
-    border: 1px solid #666 !important;
-}
+
+/* Dashboard Title */
 .dashboard-title {
     text-align: center;
-    padding: 20px;
-    background: linear-gradient(45deg, #2d2d2d, #404040);
-    border-radius: 10px;
+    padding: 30px;
+    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+    border-radius: 15px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
+
+.dashboard-title h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dashboard-title .lead {
+    font-size: 1.2em;
+    color: #ccc;
+}
+
+/* Section Titles */
 .section-title {
-    color: #4ecdc4;
+    color: #4ECDC4;
     margin-bottom: 20px;
     font-weight: 600;
+    font-size: 1.5em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
+
+/* Plot Styling */
 .plotly-graph-div {
     margin: auto;
+    transition: all 0.3s ease;
+}
+
+/* Last Updated Info */
+.last-updated {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 20px;
+    font-style: italic;
+}
+
+/* Loading Animation */
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(18, 18, 18, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #333;
+    border-top: 5px solid #4ECDC4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 10px;
+    }
+    
+    .dashboard-title h1 {
+        font-size: 2em;
+    }
+    
+    .chart-container {
+        padding: 15px;
+    }
+    
+    .dataTables_filter input {
+        width: 100%;
+    }
 }

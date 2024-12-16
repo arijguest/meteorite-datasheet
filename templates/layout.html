@@ -3,65 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Meteorite Analysis Dashboard</title>
+    <title>Meteorite Explorer | Global Analysis Dashboard</title>
+    <meta name="description" content="Explore comprehensive meteorite data analysis with interactive visualizations and detailed classifications">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
 </head>
 <body>
+    <div class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
     <div class="container-fluid">
         <div class="dashboard-title">
-            <h1>🌠 Global Meteorite Analysis Dashboard</h1>
-            <p class="lead">Comprehensive analysis of meteorite landings across Earth</p>
+            <h1><i class="fas fa-meteor"></i> Global Meteorite Explorer</h1>
+            <p class="lead">Unveiling Earth's Extraterrestrial Encounters Through Data</p>
+            <div class="dashboard-stats">
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="fas fa-globe"></i>
+                            <span class="stat-value">Global Coverage</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="fas fa-database"></i>
+                            <span class="stat-value">NASA Database</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="fas fa-chart-bar"></i>
+                            <span class="stat-value">Interactive Analysis</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <span class="stat-value">Real-time Updates</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="row">
             <div class="col-md-6 chart-container">
-                <h3 class="section-title">Class Distribution & Mass Analysis</h3>
+                <h3 class="section-title"><i class="fas fa-chart-pie"></i> Mass Distribution Analysis</h3>
+                <div class="chart-description">
+                    Explore the relationship between meteorite classes and their mass categories
+                </div>
                 {{radial_html|safe}}
             </div>
             <div class="col-md-6 chart-container">
-                <h3 class="section-title">Historical Timeline</h3>
+                <h3 class="section-title"><i class="fas fa-history"></i> Historical Discovery Timeline</h3>
+                <div class="chart-description">
+                    Temporal analysis of meteorite discoveries across different classifications
+                </div>
                 {{time_html|safe}}
             </div>
         </div>
         
         <div class="chart-container map-container">
-            <h3 class="section-title">Interactive Global Distribution Map</h3>
+            <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Global Impact Distribution</h3>
+            <div class="chart-description">
+                Interactive map showing meteorite landing sites with detailed information
+            </div>
             {{map_html|safe}}
         </div>
 
         <div class="chart-container">
-            <h3 class="section-title">Global Heatmap of Meteorite Landings</h3>
+            <h3 class="section-title"><i class="fas fa-temperature-high"></i> Global Concentration Heatmap</h3>
+            <div class="chart-description">
+                Density visualization of meteorite discoveries worldwide
+            </div>
             {{heatmap_html|safe}}
         </div>
         
         <div class="description-table">
-            <h3 class="section-title">Meteorite Classification Guide</h3>
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>Class</th>
-                        <th>Scientific Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for class, description in descriptions.items() %}
-                    <tr>
-                        <td>{{class}}</td>
-                        <td>{{description}}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <h3 class="section-title"><i class="fas fa-book"></i> Meteorite Classification Guide</h3>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Classification</th>
+                            <th>Scientific Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class, description in descriptions.items() %}
+                        <tr>
+                            <td><strong>{{class}}</strong></td>
+                            <td>{{description}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="chart-container">
-            <h3 class="section-title">Comprehensive Meteorite Database</h3>
+            <h3 class="section-title"><i class="fas fa-table"></i> Comprehensive Meteorite Database</h3>
+            <div class="table-description">
+                Detailed records of all documented meteorite discoveries
+            </div>
             {{datasheet_html|safe}}
+        </div>
+
+        <div class="last-updated">
+            Last updated: {{last_updated}} UTC
         </div>
     </div>
     
@@ -71,48 +126,96 @@
     <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.min.js"></script>
-    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     
     <script>
         $(document).ready(function() {
+            // Hide loading screen when page is ready
+            $('.loading').fadeOut();
+            
+            // Initialize DataTable with enhanced features
             $('#meteoriteTable').DataTable({
-                dom: 'Bfrtip',
+                dom: '<"row"<"col-md-6"B><"col-md-6"f>>rtip',
                 pageLength: 25,
                 buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
-                ],
-                order: [[3, 'desc']],
-                searchPanes: {
-                    viewTotal: true
-                },
-                columnDefs: [
                     {
-                        targets: [2, 6, 7],
-                        searchable: true,
-                        visible: true
+                        extend: 'collection',
+                        text: '<i class="fas fa-download"></i> Export',
+                        buttons: [
+                            {
+                                extend: 'csv',
+                                text: '<i class="fas fa-file-csv"></i> CSV',
+                                className: 'export-button'
+                            },
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i> Excel',
+                                className: 'export-button'
+                            },
+                            {
+                                extend: 'pdf',
+                                text: '<i class="fas fa-file-pdf"></i> PDF',
+                                className: 'export-button'
+                            }
+                        ]
+                    },
+                    {
+                        text: '<i class="fas fa-print"></i> Print',
+                        extend: 'print',
+                        className: 'print-button'
                     }
                 ],
+                order: [[3, 'desc']],
+                responsive: true,
+                language: {
+                    search: "<i class='fas fa-search'></i> Search:",
+                    paginate: {
+                        first: '<i class="fas fa-angle-double-left"></i>',
+                        last: '<i class="fas fa-angle-double-right"></i>',
+                        next: '<i class="fas fa-angle-right"></i>',
+                        previous: '<i class="fas fa-angle-left"></i>'
+                    }
+                },
                 initComplete: function () {
+                    // Add custom filtering capability
                     this.api().columns().every(function () {
                         let column = this;
                         let title = column.header().textContent;
                         
+                        // Create the filter input
                         let input = document.createElement('input');
-                        input.placeholder = title;
-                        input.className = 'form-control form-control-sm';
+                        input.placeholder = `Filter ${title}`;
+                        input.className = 'form-control form-control-sm column-filter';
                         
-                        $(input)
-                            .appendTo($(column.header()))
-                            .on('keyup change', function () {
+                        // Prevent immediate filtering
+                        $(input).on('click', function(e) {
+                            e.stopPropagation();
+                        });
+                        
+                        // Add delay to filtering
+                        let timeoutId = null;
+                        $(input).on('keyup change', function() {
+                            clearTimeout(timeoutId);
+                            timeoutId = setTimeout(function() {
                                 if (column.search() !== this.value) {
-                                    column
-                                        .search(this.value)
-                                        .draw();
+                                    column.search(this.value).draw();
                                 }
-                            });
+                            }.bind(this), 500);
+                        });
+                        
+                        $(column.header()).append(input);
                     });
                 }
+            });
+
+            // Add smooth scrolling
+            $('a[href*="#"]').on('click', function(e) {
+                e.preventDefault();
+                $('html, body').animate({
+                    scrollTop: $($(this).attr('href')).offset().top
+                }, 500, 'linear');
             });
         });
     </script>

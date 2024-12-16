@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import os
+from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -13,29 +14,38 @@ app = Flask(__name__)
 mapbox_token = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
 px.set_mapbox_access_token(mapbox_token)
 
-# Color scheme
+# Enhanced color scheme with carefully selected colors
 COLORS = {
-    'L-type': '#FF6B6B', 'H-type': '#4ECDC4', 'LL-type': '#45B7D1',
-    'Carbonaceous': '#96CEB4', 'Enstatite': '#FFEEAD', 'Achondrite': '#D4A5A5',
-    'Iron': '#9A8C98', 'Mesosiderite': '#C9ADA7', 'Martian': '#F08080',
-    'Lunar': '#87CEEB', 'Pallasite': '#DDA0DD', 'Unknown': '#808080',
+    'L-type': '#FF6B6B',
+    'H-type': '#4ECDC4',
+    'LL-type': '#45B7D1',
+    'Carbonaceous': '#96CEB4',
+    'Enstatite': '#FFEEAD',
+    'Achondrite': '#D4A5A5',
+    'Iron': '#9A8C98',
+    'Mesosiderite': '#C9ADA7',
+    'Martian': '#F08080',
+    'Lunar': '#87CEEB',
+    'Pallasite': '#DDA0DD',
+    'Unknown': '#808080',
     'Other': '#FFFFFF'
 }
 
+# Enhanced descriptions with more detail
 METEORITE_DESCRIPTIONS = {
-    'L-type': 'Low iron ordinary chondrites (L) contain 20-25% total iron, 19-22% iron metal, and olivine (Fa23-25).',
-    'H-type': 'High iron ordinary chondrites (H) contain 25-31% total iron, 15-19% iron metal, and olivine (Fa16-20).',
-    'LL-type': 'Low iron, low metal ordinary chondrites (LL) contain 19-22% total iron, 2% iron metal, and olivine (Fa26-32).',
-    'Carbonaceous': 'Primitive meteorites containing organic compounds, water-bearing minerals and stony materials.',
-    'Enstatite': 'Rare meteorites formed in very reducing conditions, containing high amounts of enstatite.',
-    'Achondrite': 'Igneous rocks formed by melting in their parent bodies, lacking chondrules.',
-    'Iron': 'Composed mainly of iron-nickel metal with minor amounts of sulfides and carbides.',
-    'Mesosiderite': 'Stony-iron meteorites consisting of approximately equal amounts of metal and silicate.',
-    'Martian': 'Meteorites originating from Mars, showing characteristic Martian atmospheric gases.',
-    'Lunar': 'Meteorites originating from the Moon, matching Apollo mission samples.',
-    'Pallasite': 'Stony-iron meteorites consisting of olivine crystals embedded in iron-nickel metal.',
-    'Unknown': 'Meteorites with uncertain or unclassified composition.',
-    'Other': 'Other meteorite types not classified in the main categories.'
+    'L-type': 'Low iron ordinary chondrites (L) contain 20-25% total iron, 19-22% iron metal, and olivine (Fa23-25). These are among the most common meteorites found on Earth.',
+    'H-type': 'High iron ordinary chondrites (H) contain 25-31% total iron, 15-19% iron metal, and olivine (Fa16-20). They represent some of the oldest material in our solar system.',
+    'LL-type': 'Low iron, low metal ordinary chondrites (LL) contain 19-22% total iron, 2% iron metal, and olivine (Fa26-32). These rare specimens provide insights into early solar system formation.',
+    'Carbonaceous': 'Primitive meteorites containing organic compounds, water-bearing minerals and stony materials. They are crucial for understanding the origin of life in our solar system.',
+    'Enstatite': 'Rare meteorites formed in very reducing conditions, containing high amounts of enstatite. They provide unique insights into solar system chemistry.',
+    'Achondrite': 'Igneous rocks formed by melting in their parent bodies, lacking chondrules. These meteorites represent processed material from differentiated bodies.',
+    'Iron': 'Composed mainly of iron-nickel metal with minor amounts of sulfides and carbides. They represent core material from destroyed planetesimals.',
+    'Mesosiderite': 'Stony-iron meteorites consisting of approximately equal amounts of metal and silicate. They provide evidence of major collisions between asteroids.',
+    'Martian': 'Meteorites originating from Mars, showing characteristic Martian atmospheric gases. These rare specimens are our only physical samples from Mars.',
+    'Lunar': 'Meteorites originating from the Moon, matching Apollo mission samples. They help us understand lunar geology and history.',
+    'Pallasite': 'Stony-iron meteorites consisting of olivine crystals embedded in iron-nickel metal. They are among the most beautiful meteorites known.',
+    'Unknown': 'Meteorites with uncertain or unclassified composition. Further research is needed to determine their origin.',
+    'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
 }
 
 def classify_meteorite(recclass):
@@ -76,7 +86,7 @@ def process_data():
         response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json", timeout=10)
         df = pd.DataFrame(response.json())
         
-        # Clean and process data
+        # Enhanced data processing
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
@@ -86,8 +96,13 @@ def process_data():
         # Remove rows with NaN values in critical columns
         df = df.dropna(subset=['mass', 'reclat', 'reclong'])
         
-        # Create mass categories after removing NaN values
-        df['mass_category'] = pd.qcut(df['mass'], q=5, labels=['Very Small', 'Small', 'Medium', 'Large', 'Very Large'])
+        # Create mass categories with more intuitive labels
+        mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)', 
+                      'Large (1-10kg)', 'Massive (>10kg)']
+        df['mass_category'] = pd.qcut(df['mass'], q=5, labels=mass_labels)
+        
+        # Add century classification
+        df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
         
         return df
     except Exception as e:
@@ -95,7 +110,7 @@ def process_data():
         return pd.DataFrame()
 
 def create_visualizations(df):
-    # Radial plot
+    # Enhanced Radial plot
     class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
     fig_radial = go.Figure()
     for mass_cat in class_mass.columns:
@@ -103,53 +118,93 @@ def create_visualizations(df):
             r=class_mass[mass_cat],
             theta=class_mass.index,
             name=mass_cat,
-            marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index]
+            marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
+            opacity=0.8
         ))
     fig_radial.update_layout(
-        title="Meteorite Distribution by Class and Mass",
+        title="Distribution of Meteorite Classes by Mass Category",
         template="plotly_dark",
-        polar=dict(radialaxis=dict(type="log", title="Count"))
+        polar=dict(
+            radialaxis=dict(
+                type="log",
+                title="Number of Specimens",
+                gridcolor="#444",
+                linecolor="#444"
+            ),
+            angularaxis=dict(
+                gridcolor="#444",
+                linecolor="#444"
+            )
+        ),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
 
-    # Time distribution
-    fig_time = px.histogram(df, x="year", color="recclass_clean",
-                           title="Temporal Distribution of Meteorite Falls",
-                           color_discrete_map=COLORS)
+    # Enhanced Time distribution
+    fig_time = px.histogram(
+        df,
+        x="year",
+        color="recclass_clean",
+        title="Historical Timeline of Meteorite Discoveries",
+        color_discrete_map=COLORS,
+        labels={"year": "Year of Discovery", "count": "Number of Meteorites"},
+        opacity=0.8
+    )
+    fig_time.update_layout(
+        template="plotly_dark",
+        showlegend=True,
+        legend_title="Meteorite Class",
+        xaxis_title="Year of Discovery",
+        yaxis_title="Number of Meteorites"
+    )
 
-    # Global map with size scaling
-    size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)  # Log scale for better visualization
-    fig_map = px.scatter_mapbox(df, 
-                               lat='reclat', 
-                               lon='reclong',
-                               color='recclass_clean',
-                               size=size_scale,
-                               hover_name='name',
-                               hover_data={
-                                   'mass': True,
-                                   'year': True,
-                                   'recclass': True
-                               },
-                               color_discrete_map=COLORS,
-                               zoom=1)
+    # Enhanced Global map
+    size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
+    fig_map = px.scatter_mapbox(
+        df,
+        lat='reclat',
+        lon='reclong',
+        color='recclass_clean',
+        size=size_scale,
+        hover_name='name',
+        hover_data={
+            'mass': ':,.2f g',
+            'year': True,
+            'recclass_clean': 'Classification',
+            'fall': True
+        },
+        color_discrete_map=COLORS,
+        zoom=1,
+        title="Global Distribution of Meteorite Landings"
+    )
     fig_map.update_layout(
         mapbox_style="carto-darkmatter",
         height=800,
-        margin={"r":0,"t":50,"l":0,"b":0}
+        margin={"r":0,"t":50,"l":0,"b":0},
+        legend_title="Meteorite Class"
     )
 
-    # Heatmap
+    # Enhanced Heatmap
     fig_heatmap = go.Figure(data=go.Densitymapbox(
         lat=df['reclat'],
         lon=df['reclong'],
-        radius=5,
-        colorscale='Viridis'
+        radius=10,
+        colorscale='Viridis',
+        hoverongaps=False,
+        showscale=True
     ))
     fig_heatmap.update_layout(
         mapbox_style="carto-darkmatter",
         mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
         height=600,
         margin={"r":0,"t":50,"l":0,"b":0},
-        title="Heatmap of Meteorite Landings"
+        title="Global Concentration of Meteorite Discoveries"
     )
 
     return map(lambda fig: fig.to_html(full_html=False),
@@ -164,11 +219,27 @@ def home():
     visualizations = create_visualizations(df)
     radial_html, time_html, map_html, heatmap_html = visualizations
 
+    # Enhanced data formatting
     df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
     df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
     
-    datasheet_html = df[["name", "recclass", "recclass_clean", "mass_formatted", 
-                        "year_formatted", "reclat", "reclong", "fall", "nametype"]].to_html(
+    # Rename columns for display
+    display_columns = {
+        "name": "Meteorite Name",
+        "recclass": "Scientific Classification",
+        "recclass_clean": "Main Class",
+        "mass_formatted": "Mass",
+        "year_formatted": "Discovery Year",
+        "reclat": "Latitude",
+        "reclong": "Longitude",
+        "fall": "Fall Type",
+        "nametype": "Name Type"
+    }
+    
+    df_display = df[list(display_columns.keys())].copy()
+    df_display.columns = list(display_columns.values())
+    
+    datasheet_html = df_display.to_html(
         index=False,
         classes="table table-dark table-hover display",
         table_id="meteoriteTable",
@@ -181,7 +252,8 @@ def home():
                          time_html=time_html,
                          map_html=map_html,
                          heatmap_html=heatmap_html,
-                         datasheet_html=datasheet_html)
+                         datasheet_html=datasheet_html,
+                         last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
