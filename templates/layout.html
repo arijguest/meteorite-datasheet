@@ -17,7 +17,8 @@
     </div>
 
     <div class="container-fluid">
-        <div class="dashboard-title">
+        <!-- Centralized Dashboard Title -->
+        <div class="dashboard-title text-center">
             <h1><i class="fas fa-meteor"></i> Global Meteorite Explorer</h1>
             <p class="lead">Unveiling Earth's Extraterrestrial Encounters Through Data</p>
             <div class="dashboard-stats">
@@ -68,6 +69,7 @@
             </div>
         </div>
         
+        <!-- Ensure maps are the same size and show the entire world -->
         <div class="row">
             <div class="col-lg-6 col-md-12 chart-container map-container">
                 <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Global Impact Distribution</h3>
@@ -76,7 +78,7 @@
                 </div>
                 {{map_html|safe}}
             </div>
-            <div class="col-lg-6 col-md-12 chart-container">
+            <div class="col-lg-6 col-md-12 chart-container map-container">
                 <h3 class="section-title"><i class="fas fa-temperature-high"></i> Global Concentration Heatmap</h3>
                 <div class="chart-description">
                     Density visualization of meteorite discoveries worldwide
@@ -190,6 +192,25 @@
                     $('.paginate_button').addClass('btn btn-sm');
                 }
             });
+
+            // Adjust Plotly maps to show the entire world
+            function adjustMapViews() {
+                const mapConfig = {
+                    mapbox: {
+                        center: { lat: 0, lon: 0 },
+                        zoom: 1
+                    }
+                };
+
+                // Update the Impact Distribution Map
+                Plotly.relayout('map', mapConfig);
+
+                // Update the Heatmap
+                Plotly.relayout('heatmap', mapConfig);
+            }
+
+            // Call the function after a slight delay to ensure plots are loaded
+            setTimeout(adjustMapViews, 500);
 
             // Add smooth scrolling
             $('a[href*="#"]').on('click', function(e) {

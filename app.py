@@ -119,7 +119,7 @@ def create_visualizations(df):
             name=mass_cat,
             marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
             opacity=0.8,
-            hovertemplate="Classification: %{theta}<br>Count: %{r}<br>Mass Category: %{customdata}<extra></extra>",
+            hovertemplate="Class: %{theta}<br>Count: %{r}<br>Mass Category: %{customdata}<extra></extra>",
             customdata=[mass_cat] * len(class_mass.index)
         ))
     fig_radial.update_layout(
@@ -185,15 +185,19 @@ def create_visualizations(df):
             'fall': '| Fall Type'
         },
         labels={
-            'mass': 'Mass (g)',
-            'year': 'Discovery Year',
-            'recclass_clean': 'Classification',
+            'mass': 'Mass',
+            'year': 'Year',
+            'recclass_clean': 'Class',
             'fall': 'Fall Type',
-            'name': 'Meteorite Name'
+            'name': 'Name'
         },
         color_discrete_map=COLORS,
         zoom=1,
         title="Global Distribution of Meteorite Landings"
+    )
+    fig_map.update_layout(
+        mapbox=dict(center=dict(lat=0, lon=0), zoom=1),
+        height=600
     )
 
     # Enhanced Heatmap
@@ -203,7 +207,7 @@ def create_visualizations(df):
         radius=10,
         colorscale='Viridis',
         showscale=True,
-        hovertemplate="Latitude: %{lat}<br>Longitude: %{lon}<br>Concentration: %{z}<extra></extra>"
+        hovertemplate="Latitude: %{lat:.2f}°<br>Longitude: %{lon:.2f}°<br>Density: %{z}<extra></extra>"
     ))
     fig_heatmap.update_layout(
         mapbox_style="carto-darkmatter",
@@ -229,13 +233,13 @@ def home():
     df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
     df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
     
-    # Rename columns for display and remove nametype
+    # Rename columns for display
     display_columns = {
-        "name": "Meteorite Name",
+        "name": "Name",
         "recclass": "Scientific Classification",
-        "recclass_clean": "Main Class",
+        "recclass_clean": "Class",
         "mass_formatted": "Mass",
-        "year_formatted": "Discovery Year",
+        "year_formatted": "Year",
         "reclat": "Latitude",
         "reclong": "Longitude",
         "fall": "Fall Type"
