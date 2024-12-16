@@ -65,20 +65,38 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* Search Input Styling */
+/* Enhanced Table Navigation */
+.dataTables_length {
+    margin-bottom: 15px;
+}
+
+.dataTables_paginate {
+    margin-top: 15px !important;
+}
+
+.dataTables_info {
+    padding-top: 15px !important;
+    color: #ccc !important;
+}
+
+/* Enhanced Table Search */
+.dataTables_filter {
+    margin-bottom: 15px;
+}
+
 .dataTables_filter input {
-    background-color: #333 !important;
+    background: #2d2d2d !important;
+    border: 2px solid #4ECDC4 !important;
     color: white !important;
-    border: 2px solid #444 !important;
-    border-radius: 8px;
-    padding: 8px 15px;
+    padding: 8px 15px !important;
+    border-radius: 8px !important;
+    width: 300px !important;
     transition: all 0.3s ease;
-    width: 250px;
 }
 
 .dataTables_filter input:focus {
-    border-color: #666 !important;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(78, 205, 196, 0.3) !important;
+    border-color: #45B7D1 !important;
     outline: none;
 }
 

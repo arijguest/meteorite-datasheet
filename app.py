@@ -176,20 +176,21 @@ def create_visualizations(df):
         size=size_scale,
         hover_name='name',
         hover_data={
-            'mass': ':,.2f g',
-            'year': True,
+            'mass': ':,.2f g | Mass',
+            'year': '| Discovery Year',
+            'recclass_clean': '| Classification',
+            'fall': '| Fall Type'
+        },
+        labels={
+            'mass': 'Mass (g)',
+            'year': 'Discovery Year',
             'recclass_clean': 'Classification',
-            'fall': True
+            'fall': 'Fall Type',
+            'name': 'Meteorite Name'
         },
         color_discrete_map=COLORS,
         zoom=1,
         title="Global Distribution of Meteorite Landings"
-    )
-    fig_map.update_layout(
-        mapbox_style="carto-darkmatter",
-        height=800,
-        margin={"r":0,"t":50,"l":0,"b":0},
-        legend_title="Meteorite Class"
     )
 
     # Enhanced Heatmap
