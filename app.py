@@ -159,7 +159,7 @@ def create_visualizations(df):
                 x=1
             )
         )
-        radial_html = fig_radial.to_html(full_html=False, include_plotlyjs=False, div_id='radial')
+        radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
 
         # Enhanced Time distribution
         fig_time = px.histogram(
@@ -178,7 +178,7 @@ def create_visualizations(df):
             xaxis_title="Year of Discovery",
             yaxis_title="Number of Meteorites"
         )
-        time_html = fig_time.to_html(full_html=False, include_plotlyjs=False, div_id='time')
+        time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
         # Enhanced Global map
         size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
@@ -205,7 +205,7 @@ def create_visualizations(df):
             margin={"r":0,"t":50,"l":0,"b":0},
             legend_title="Meteorite Class"
         )
-        map_html = fig_map.to_html(full_html=False, include_plotlyjs=False, div_id='map')
+        map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
 
         # Enhanced Heatmap
         fig_heatmap = go.Figure(data=go.Densitymapbox(
@@ -222,7 +222,7 @@ def create_visualizations(df):
             margin={"r":0,"t":50,"l":0,"b":0},
             title="Global Concentration of Meteorite Discoveries"
         )
-        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs=False, div_id='heatmap')
+        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
 
         return radial_html, time_html, map_html, heatmap_html
 
