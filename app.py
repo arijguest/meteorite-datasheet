@@ -215,13 +215,13 @@ def home():
     
     gc.collect()  # Clean up memory
     
-return render_template('layout.html',
-                         descriptions=METEORITE_DESCRIPTIONS,
-                         radial_html=radial_html,
-                         time_html=time_html,
-                         map_html=map_html,
-                         heatmap_html=heatmap_html,
-                         datasheet_html=datasheet_html)
+    return render_template('layout.html',
+                            descriptions=METEORITE_DESCRIPTIONS,
+                            radial_html=radial_html,
+                            time_html=time_html,
+                            map_html=map_html,
+                            heatmap_html=heatmap_html,
+                            datasheet_html=datasheet_html)
 
 if __name__ == "__main__":
     app.config['TEMPLATES_AUTO_RELOAD'] = True
