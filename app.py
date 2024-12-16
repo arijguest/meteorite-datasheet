@@ -141,7 +141,6 @@ def create_visualizations(df):
             polar=dict(
                 radialaxis=dict(
                     type="log",
-                    title="Number of Specimens",
                     gridcolor="#444",
                     linecolor="#444"
                 ),
@@ -149,14 +148,6 @@ def create_visualizations(df):
                     gridcolor="#444",
                     linecolor="#444"
                 )
-            ),
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
             )
         )
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
@@ -205,7 +196,6 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
-            margin={"r":0,"t":50,"l":0,"b":0},
             showlegend=False,
             title=None
         )
@@ -226,8 +216,7 @@ def create_visualizations(df):
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            height=600,
-            margin={"r":0,"t":50,"l":0,"b":0},
+            height=800,
             showlegend=False
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
