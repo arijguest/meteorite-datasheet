@@ -60,6 +60,40 @@ METEORITE_DESCRIPTIONS = {
 
 # Global variable to store the dataset
 df_global = None
+
+# Define meteorite categories
+def classify_meteorite(recclass):
+    if pd.isna(recclass):
+        return 'Unknown'
+    
+    recclass = str(recclass).strip()
+    
+    if recclass.startswith('L'):
+        return 'L-type'
+    elif recclass.startswith('H'):
+        return 'H-type'
+    elif recclass.startswith('LL'):
+        return 'LL-type'
+    elif recclass.startswith(('CI', 'CM', 'CR', 'CO', 'CV', 'CK')):
+        return 'Carbonaceous'
+    elif recclass.startswith(('EH', 'EL')):
+        return 'Enstatite'
+    elif recclass.startswith(('Iron', 'IAB', 'IC', 'IID', 'IIE', 'IIF', 'IIG', 'IIIAB', 'IVA', 'IVB')):
+        return 'Iron'
+    elif recclass.startswith('Mesosiderite'):
+        return 'Mesosiderite'
+    elif recclass.startswith('Martian'):
+        return 'Martian'
+    elif recclass.startswith('Lunar'):
+        return 'Lunar'
+    elif recclass.startswith('Pallasite'):
+        return 'Pallasite'
+    elif recclass.startswith(('Howardite', 'Eucrite', 'Diogenite', 'Angrite', 'Aubrite', 'Ureilite')):
+        return 'Achondrite'
+    elif recclass in ('Unknown', 'Stone-uncl', 'Chondrite-ung'):
+        return 'Unknown'
+    else:
+        return 'Other'
 def process_data():
     try:
         # Fetch data only if df_global is None
@@ -148,39 +182,6 @@ def data():
 @app.before_request
 def before_request():
     gc.collect()
-
-def classify_meteorite(recclass):
-    if pd.isna(recclass):
-        return 'Unknown'
-    
-    recclass = str(recclass).strip()
-    
-    if recclass.startswith('L'):
-        return 'L-type'
-    elif recclass.startswith('H'):
-        return 'H-type'
-    elif recclass.startswith('LL'):
-        return 'LL-type'
-    elif recclass.startswith(('CI', 'CM', 'CR', 'CO', 'CV', 'CK')):
-        return 'Carbonaceous'
-    elif recclass.startswith(('EH', 'EL')):
-        return 'Enstatite'
-    elif recclass.startswith(('Iron', 'IAB', 'IC', 'IID', 'IIE', 'IIF', 'IIG', 'IIIAB', 'IVA', 'IVB')):
-        return 'Iron'
-    elif recclass.startswith('Mesosiderite'):
-        return 'Mesosiderite'
-    elif recclass.startswith('Martian'):
-        return 'Martian'
-    elif recclass.startswith('Lunar'):
-        return 'Lunar'
-    elif recclass.startswith('Pallasite'):
-        return 'Pallasite'
-    elif recclass.startswith(('Howardite', 'Eucrite', 'Diogenite', 'Angrite', 'Aubrite', 'Ureilite')):
-        return 'Achondrite'
-    elif recclass in ('Unknown', 'Stone-uncl', 'Chondrite-ung'):
-        return 'Unknown'
-    else:
-        return 'Other'
 
 def create_visualizations(df):
     try:
