@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, g
 import requests
 import pandas as pd
 import plotly.express as px
@@ -58,16 +58,29 @@ METEORITE_DESCRIPTIONS = {
     'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
 }
 
+# Global variable to store the dataset
+df_global = None
+
+# Load and process data when the app starts
+def load_data():
+    global df_global
+    df_global = process_data()
+    if df_global.empty:
+        logger.error("Failed to load meteorite data during app initialization.")
+
+# Call load_data() when the app starts
+load_data()
+
 @app.route('/data')
 def data():
+    global df_global
+    df = df_global  # Use the pre-loaded dataset
+
     # Parameters sent by DataTables
     draw = int(request.args.get('draw', 1))
     start = int(request.args.get('start', 0))
     length = int(request.args.get('length', 10))
     search_value = request.args.get('search[value]', '')
-
-    # Load your dataset
-    df = process_data()
 
     # Filtering
     if search_value:
@@ -134,28 +147,37 @@ def classify_meteorite(recclass):
 
 def process_data():
     try:
-        response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json?$limit=50000", timeout=10)
-        response.raise_for_status()
-        df = pd.DataFrame(response.json())
-        
-        # Enhanced data processing with error handling
+        # Fetch data only if df_global is None
+        if not os.path.exists('meteorite_data.csv'):
+            response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json?$limit=50000", timeout=10)
+            response.raise_for_status()
+            df = pd.DataFrame(response.json())
+            df.to_csv('meteorite_data.csv', index=False)
+        else:
+            df = pd.read_csv('meteorite_data.csv')
+
+        # Process data
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
         df['recclass_clean'] = df['recclass'].apply(classify_meteorite)
-        
+
         # Remove rows with NaN values in critical columns
         df = df.dropna(subset=['mass', 'reclat', 'reclong'])
-        
+
         # Create mass categories with more intuitive labels
-        mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)', 
-                      'Large (1-10kg)', 'Massive (>10kg)']
+        mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)',
+                       'Large (1-10kg)', 'Massive (>10kg)']
         df['mass_category'] = pd.qcut(df['mass'], q=5, labels=mass_labels)
-        
+
         # Add century classification
         df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
-        
+
+        # Enhanced data formatting
+        df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown")
+        df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
+
         return df
     except Exception as e:
         logger.error(f"Error processing data: {e}")
@@ -299,13 +321,6 @@ def home():
         
         df_display = df[list(display_columns.keys())].copy()
         df_display.columns = list(display_columns.values())
-        
-        datasheet_html = df_display.to_html(
-            index=False,
-            classes="table table-dark table-hover display",
-            table_id="meteoriteTable",
-            escape=False
-        )
 
         return render_template('layout.html',
                              descriptions=METEORITE_DESCRIPTIONS,

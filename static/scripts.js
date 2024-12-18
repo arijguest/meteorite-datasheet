@@ -30,6 +30,7 @@ class MeteoriteExplorer {
         this.table = $('#meteoriteTable').DataTable({
             serverSide: true,
             processing: true,
+            deferRender: true,
             ajax: {
                 url: '/data',
                 type: 'GET',

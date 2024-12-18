@@ -128,11 +128,23 @@
             <div class="table-description">
                 Detailed records of all documented meteorite discoveries
             </div>
-            {{datasheet_html|safe}}
-        </div>
-
-        <div class="last-updated">
-            Last updated: {{last_updated}} UTC
+            <table id="meteoriteTable" class="table table-dark table-hover display">
+                <thead>
+                    <tr>
+                        <th>Meteorite Name</th>
+                        <th>Classification</th>
+                        <th>Group Class</th>
+                        <th>Mass</th>
+                        <th>Discovered</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Find/Fall</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- DataTables will populate the body via AJAX -->
+                </tbody>
+            </table>
         </div>
     </div>
     
