@@ -197,7 +197,7 @@ def create_visualizations(df):
         df['mass_with_units'] = df['mass'].apply(format_mass)
 
         # Update size scale for plotting
-        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 0.5)
+        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 0.2)
 
         # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
@@ -255,7 +255,7 @@ def create_visualizations(df):
             df,
             lat='reclat',
             lon='reclong',
-            color='recclass',
+            color='recclass_clean',
             size=size_scale,
             hover_name='name',
             hover_data={
@@ -264,7 +264,10 @@ def create_visualizations(df):
                 'Class': df['recclass'],
                 'Mass': df['mass_with_units'],
                 'Year': df['year_formatted'],
-                'fall': True
+                'Fall': True,
+                'reclat' : False,
+                'reclong' : False,
+                'size' : False
             },
             color_discrete_map=COLORS
         )
