@@ -266,7 +266,7 @@ def create_visualizations(df):
                 'Class': df['recclass'],
                 'Mass': df['mass_with_units'],
                 'Year': df['year_formatted'],
-                'Fall': True,
+                'Fall': df['fall'],
                 'reclat': False,
                 'reclong': False,
                 'recclass': False,
