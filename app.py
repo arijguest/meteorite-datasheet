@@ -103,7 +103,7 @@ def process_data():
             df = pd.DataFrame(response.json())
             df.to_csv('meteorite_data.csv', index=False)
         else:
-            df = pd.read_csv('meteorite_data.csv')
+            df = pd.read_csv('meteorite_data.csv', on_bad_lines='skip')
 
         # Process data
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
