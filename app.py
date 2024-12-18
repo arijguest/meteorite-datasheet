@@ -295,7 +295,8 @@ def create_visualizations(df):
 @app.route("/")
 def home():
     try:
-        df = process_data()
+        global df_global
+        df = df_global
         if df.empty:
             return "Unable to fetch meteorite data", 503
 
@@ -327,7 +328,6 @@ def home():
                              time_html=time_html,
                              map_html=map_html,
                              heatmap_html=heatmap_html,
-                             datasheet_html=datasheet_html,
                              last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     except Exception as e:
         logger.error(f"Error in home route: {e}")
