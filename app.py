@@ -117,8 +117,8 @@ def process_data():
 
         # Create mass categories with more intuitive labels
         mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)',
-                       'Large (1-10kg)', 'Massive (>10kg)']
-        df['mass_category'] = pd.qcut(df['mass'], q=5, labels=mass_labels)
+                    'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
+        df['mass_category'] = pd.qcut(df['mass'], q=6, labels=mass_labels)
 
         # Add century classification
         df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
@@ -207,7 +207,7 @@ def create_visualizations(df):
                 name=mass_cat,
                 marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
                 opacity=0.8,
-                hovertemplate='Class: %{theta}<br>Count: %{r}<extra></extra>'
+                hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
             ))
         fig_radial.update_layout(
             title=None,
@@ -217,7 +217,8 @@ def create_visualizations(df):
                 radialaxis=dict(
                     type="log",
                     gridcolor="#444",
-                    linecolor="#444"
+                    linecolor="#444",
+                    showticklabels=False
                 ),
                 angularaxis=dict(
                     gridcolor="#444",
