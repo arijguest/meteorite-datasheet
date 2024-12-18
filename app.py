@@ -185,6 +185,20 @@ def before_request():
 
 def create_visualizations(df):
     try:
+        # Process mass to include appropriate units
+        def format_mass(x):
+            if x >= 1e6:
+                return f"{x / 1e6:.2f} tonnes"
+            elif x >= 1e3:
+                return f"{x / 1e3:.2f} kg"
+            else:
+                return f"{x:.2f} g"
+
+        df['mass_with_units'] = df['mass'].apply(format_mass)
+
+        # Update size scale for plotting
+        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 0.5)
+
         # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
         fig_radial = go.Figure()
@@ -214,7 +228,7 @@ def create_visualizations(df):
         )
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
 
-        # Enhanced Time distribution
+        # Time Distribution Plot
         fig_time = px.histogram(
             df,
             x="year",
@@ -236,19 +250,20 @@ def create_visualizations(df):
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
-        # Enhanced Global map
-        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
+        # Global Map
         fig_map = px.scatter_mapbox(
             df,
             lat='reclat',
             lon='reclong',
-            color='recclass_clean',
+            color='recclass',
             size=size_scale,
             hover_name='name',
             hover_data={
-                'mass': ':.2f g',
-                'year': True,
-                'recclass_clean': 'Classification',
+                'Lat': df['reclat'],
+                'Long': df['reclong'],
+                'Class': df['recclass'],
+                'Mass': df['mass_with_units'],
+                'Year': df['year_formatted'],
                 'fall': True
             },
             color_discrete_map=COLORS
