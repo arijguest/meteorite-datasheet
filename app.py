@@ -208,7 +208,6 @@ def create_visualizations(df):
                 name=mass_cat,
                 marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
                 opacity=0.8,
-                zoom = 1.4,
                 hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
             ))
         fig_radial.update_layout(
@@ -237,8 +236,7 @@ def create_visualizations(df):
             color="recclass_clean",
             color_discrete_map=COLORS,
             labels={"year": "Discovery", "count": "Count"},
-            opacity=0.8,
-            zoom = 1.2
+            opacity=0.8
         )
         fig_time.update_layout(
             template="plotly_dark",
