@@ -39,12 +39,14 @@ class MeteoriteExplorer {
             },
             columns: [
                 { data: 'name' },
-                { data: 'mass' },
-                { data: 'year' },
                 { data: 'recclass' },
+                { data: 'recclass_clean' },
+                { data: 'mass_formatted' },
+                { data: 'year_formatted' },
                 { data: 'reclat' },
-                { data: 'reclong' }
-            ],
+                { data: 'reclong' },
+                { data: 'fall' }
+            ],            
             dom: '<"top"<"row"<"col-md-6"f><"col-md-6"B>>>rt<"bottom"<"row"<"col-md-6"l><"col-md-6"p>>>',
             buttons: [
                 {

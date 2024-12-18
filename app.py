@@ -81,8 +81,8 @@ def data():
     # Pagination
     df_page = df_filtered.iloc[start:start+length]
 
-        # Select only the columns needed
-    df_page = df_page[['name', 'mass', 'year', 'recclass', 'reclat', 'reclong']]
+    # Select only the columns needed
+    df_page = df_page[['name', 'recclass', 'recclass_clean', 'mass_formatted', 'year_formatted', 'reclat', 'reclong', 'fall']]
 
     # Prepare data for JSON response
     data = df_page.to_dict('records')
