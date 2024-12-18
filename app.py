@@ -208,13 +208,13 @@ def create_visualizations(df):
                 name=mass_cat,
                 marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
                 opacity=0.8,
+                zoom = 1.4,
                 hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
             ))
         fig_radial.update_layout(
             title=None,
             template="plotly_dark",
             showlegend=False,
-            width = '100%',
             polar=dict(
                 radialaxis=dict(
                     type="log",
@@ -237,7 +237,8 @@ def create_visualizations(df):
             color="recclass_clean",
             color_discrete_map=COLORS,
             labels={"year": "Discovery", "count": "Count"},
-            opacity=0.8
+            opacity=0.8,
+            zoom = 1.2
         )
         fig_time.update_layout(
             template="plotly_dark",
@@ -247,7 +248,6 @@ def create_visualizations(df):
             xaxis_title="Discovered",
             yaxis_title="Total",
             showlegend=False,
-            width = '100%',
             xaxis=dict(range=[1700, 2013])
         )
         fig_time.update_traces(
@@ -287,7 +287,7 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
-            width = '100%',
+            width = 1000,
             showlegend=False,
             title=None
         )
@@ -310,7 +310,7 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
-            width = '100%',
+            width = 1000,
             showlegend=False
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')

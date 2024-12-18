@@ -179,6 +179,15 @@ table.dataTable tbody tr:hover td {
     background-color: rgba(78, 205, 196, 0.1);
 }
 
+/* Plotly Plots */
+.js-plotly-plot {
+    width: 100% !important;
+}
+
+.plotly {
+    width: 100% !important;
+}
+
 /* Export Buttons */
 .dt-buttons {
     margin-bottom: 20px;
