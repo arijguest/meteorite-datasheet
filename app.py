@@ -295,8 +295,8 @@ def create_visualizations(df):
             lat=df['reclat'],
             lon=df['reclong'],
             radius=10,
-            colorscale='Viridis'
-            showscale=False,
+            colorscale='Viridis',
+            showscale=False
         ))
         fig_heatmap.update_layout(
             mapbox=dict(
