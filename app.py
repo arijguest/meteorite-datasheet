@@ -244,7 +244,7 @@ def create_visualizations(df):
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites",
             showlegend=False,
-            xaxis=dict(range=[1700, datetime.now().year])
+            xaxis=dict(range=[1700, 2013])
         )
         fig_time.update_traces(
             hovertemplate='Discovery: %{x}<br>Class: %{customdata}<br>Count: %{y}<extra></extra>',
