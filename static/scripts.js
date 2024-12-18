@@ -19,7 +19,7 @@ class MeteoriteExplorer {
         this.initializeDataTable();
         this.initializeMaps();
         this.initializeEventListeners();
-        table.on('init.dt', function () {
+        this.table.on('init.dt', function () {
             // Hide the loading spinner after data has been loaded
             $('.loading').fadeOut('slow');
             $('#main-content').fadeIn('slow');
@@ -27,7 +27,7 @@ class MeteoriteExplorer {
     }
 
     initializeDataTable() {
-        let table = $('#meteoriteTable').DataTable({
+        this.table = $('#meteoriteTable').DataTable({
             serverSide: true,
             processing: true,
             ajax: {
