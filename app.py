@@ -195,9 +195,7 @@ def create_visualizations(df):
                 return f"{x:.2f} g"
 
         df['mass_with_units'] = df['mass'].apply(format_mass)
-
-        # Update size scale for plotting
-        size_scale = df['mass'].apply(lambda x: np.log10(x + 1) * 0.2)
+        df['size'] = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
 
         # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
@@ -208,7 +206,8 @@ def create_visualizations(df):
                 theta=class_mass.index,
                 name=mass_cat,
                 marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
-                opacity=0.8
+                opacity=0.8,
+                hovertemplate='Class: %{theta}<br>Count: %{r}<extra></extra>'
             ))
         fig_radial.update_layout(
             title=None,
@@ -234,7 +233,7 @@ def create_visualizations(df):
             x="year",
             color="recclass_clean",
             color_discrete_map=COLORS,
-            labels={"year": "Discovery", "count": "No. of Meteorites"},
+            labels={"year": "Discovery", "count": "Count"},
             opacity=0.8
         )
         fig_time.update_layout(
@@ -245,8 +244,11 @@ def create_visualizations(df):
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites",
             showlegend=False,
-            xaxis=dict( range=[1700, datetime.now().year]
-            )
+            xaxis=dict(range=[1700, datetime.now().year])
+        )
+        fig_time.update_traces(
+            hovertemplate='Discovery: %{x}<br>Class: %{customdata}<br>Count: %{y}<extra></extra>',
+            customdata=df['recclass_clean']
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
@@ -255,8 +257,8 @@ def create_visualizations(df):
             df,
             lat='reclat',
             lon='reclong',
-            color='recclass_clean',
-            size=size_scale,
+            color='recclass',
+            size='size',
             hover_name='name',
             hover_data={
                 'Lat': df['reclat'],
@@ -265,9 +267,10 @@ def create_visualizations(df):
                 'Mass': df['mass_with_units'],
                 'Year': df['year_formatted'],
                 'Fall': True,
-                'reclat' : False,
-                'reclong' : False,
-                'size' : False
+                'reclat': False,
+                'reclong': False,
+                'recclass': False,
+                'size': False
             },
             color_discrete_map=COLORS
         )
@@ -296,7 +299,7 @@ def create_visualizations(df):
             mapbox=dict(
                 style="carto-darkmatter",
                 center=dict(lat=0, lon=0),
-                zoom=0.5  # Adjusted zoom level to show full world map
+                zoom=0.5
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
