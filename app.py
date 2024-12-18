@@ -57,6 +57,9 @@ METEORITE_DESCRIPTIONS = {
     'Unknown': 'Meteorites with uncertain or unclassified composition. Further research is needed to determine their origin.',
     'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
 }
+
+# Global variable to store the dataset
+df_global = None
 def process_data():
     try:
         # Fetch data only if df_global is None
@@ -94,9 +97,6 @@ def process_data():
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         return pd.DataFrame()
-
-# Global variable to store the dataset
-df_global = None
 
 # Load and process data when the app starts
 def load_data():
