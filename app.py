@@ -214,6 +214,7 @@ def create_visualizations(df):
             title=None,
             template="plotly_dark",
             showlegend=False,
+            width = '100%',
             polar=dict(
                 radialaxis=dict(
                     type="log",
@@ -246,6 +247,7 @@ def create_visualizations(df):
             xaxis_title="Discovered",
             yaxis_title="Total",
             showlegend=False,
+            width = '100%',
             xaxis=dict(range=[1700, 2013])
         )
         fig_time.update_traces(
@@ -285,6 +287,7 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
+            width = '100%',
             showlegend=False,
             title=None
         )
@@ -307,6 +310,7 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
+            width = '100%',
             showlegend=False
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
