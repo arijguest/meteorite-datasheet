@@ -180,7 +180,18 @@ table.dataTable tbody tr:hover td {
 }
 
 /* Plotly Plots */
-.plot-container {
+
+.plot-container,
+.js-plotly-plot,
+.plotly {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important; /* Ensure plots fill their containers */
+}
+
+.map-container .plotly,
+.chart-container .plotly {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
@@ -190,12 +201,10 @@ table.dataTable tbody tr:hover td {
     width: 100% !important;
 }
 
-.map-container .plotly,
-.chart-container .plotly {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
+.plotly .modebar {
+    margin: 0 !important; /* Remove default Plotly margins */
 }
+
 
 /* Export Buttons */
 .dt-buttons {

@@ -214,7 +214,9 @@ def create_visualizations(df):
             title=None,
             template="plotly_dark",
             showlegend=False,
-            margin=dict(l=0, r=0, t=0, b=0),
+            margin=dict(l=0, r=0, t=20, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             polar=dict(
                 radialaxis=dict(
                     type="log",
