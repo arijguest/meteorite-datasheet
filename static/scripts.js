@@ -16,21 +16,30 @@ const CONFIG = {
 // Main Application Logic
 class MeteoriteExplorer {
     constructor() {
-        this.initializeLoading();
         this.initializeDataTable();
         this.initializeMaps();
         this.initializeEventListeners();
     }
 
-    initializeLoading() {
-        $(window).on('load', () => {
-            $('.loading').fadeOut('slow');
-        });
-    }
-
     initializeDataTable() {
-        $('#meteoriteTable').DataTable({
-            ...CONFIG.dataTable,
+        let table = $('#meteoriteTable').DataTable({
+            serverSide: true,
+            processing: true,
+            ajax: {
+                url: '/data',
+                type: 'GET',
+                error: function (xhr, error, code) {
+                    ErrorHandler.handleError(error, 'DataTable AJAX');
+                }
+            },
+            columns: [
+                { data: 'name' },
+                { data: 'mass' },
+                { data: 'year' },
+                { data: 'recclass' },
+                { data: 'reclat' },
+                { data: 'reclong' }
+            ],
             dom: '<"top"<"row"<"col-md-6"f><"col-md-6"B>>>rt<"bottom"<"row"<"col-md-6"l><"col-md-6"p>>>',
             buttons: [
                 {
@@ -73,6 +82,10 @@ class MeteoriteExplorer {
                 zeroRecords: "No matching meteorites found",
                 emptyTable: "No meteorite data available"
             }
+        });
+        table.on('xhr.dt', function () {
+            // Hide the loading spinner after data has been loaded
+            $('.loading').fadeOut('slow');
         });
     }
     initializeMaps() {

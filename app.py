@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import requests
 import pandas as pd
 import plotly.express as px
@@ -9,10 +9,12 @@ import gc
 from datetime import datetime
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_cors import CORS
 
 # Initialize Flask app
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+CORS(app)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +57,40 @@ METEORITE_DESCRIPTIONS = {
     'Unknown': 'Meteorites with uncertain or unclassified composition. Further research is needed to determine their origin.',
     'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
 }
+
+@app.route('/data')
+def data():
+    # Parameters sent by DataTables
+    draw = int(request.args.get('draw', 1))
+    start = int(request.args.get('start', 0))
+    length = int(request.args.get('length', 10))
+    search_value = request.args.get('search[value]', '')
+
+    # Load your dataset (you might want to load this data once and cache it)
+    df = pd.read_csv('path_to_your_meteorite_data.csv')
+
+    # Filtering
+    if search_value:
+        df_filtered = df[df['name'].str.contains(search_value, case=False, na=False)]
+    else:
+        df_filtered = df
+
+    records_total = len(df)
+    records_filtered = len(df_filtered)
+
+    # Pagination
+    df_page = df_filtered.iloc[start:start+length]
+
+    # Prepare data for JSON response
+    data = df_page.to_dict('records')
+
+    # Return response in the format DataTables expects
+    return jsonify({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data
+    })
 
 @app.before_request
 def before_request():
