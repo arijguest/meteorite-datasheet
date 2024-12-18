@@ -76,7 +76,6 @@ body {
 /* Map Container */
 .map-container { 
     height: 600px;
-    margin-left: 0px;
     border-radius: 15px;
     overflow: hidden;
 }
@@ -181,12 +180,18 @@ table.dataTable tbody tr:hover td {
 }
 
 /* Plotly Plots */
-.js-plotly-plot {
+.js-plotly-plot, .plot-container, .plotly {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.main-svg {
     width: 100% !important;
 }
 
-.plotly {
-    width: 100% !important;
+.map-container .plotly {
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Export Buttons */
