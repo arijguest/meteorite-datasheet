@@ -214,6 +214,7 @@ def create_visualizations(df):
             title=None,
             template="plotly_dark",
             showlegend=False,
+            margin=dict(l=0, r=0, t=0, b=0),
             polar=dict(
                 radialaxis=dict(
                     type="log",
@@ -246,6 +247,7 @@ def create_visualizations(df):
             xaxis_title="Discovered",
             yaxis_title="Total",
             showlegend=False,
+            margin=dict(l=0, r=0, t=0, b=0),
             xaxis=dict(range=[1700, 2013])
         )
         fig_time.update_traces(
@@ -282,6 +284,7 @@ def create_visualizations(df):
                 center=dict(lat=0, lon=0),
                 zoom=0.3
             ),
+            margin=dict(l=0, r=0, t=0, b=0),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
@@ -305,6 +308,7 @@ def create_visualizations(df):
                 center=dict(lat=0, lon=0),
                 zoom=0.3
             ),
+            margin=dict(l=0, r=0, t=0, b=0),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,

@@ -180,18 +180,21 @@ table.dataTable tbody tr:hover td {
 }
 
 /* Plotly Plots */
-.js-plotly-plot, .plot-container, .plotly {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-
-.main-svg {
-    width: 100% !important;
-}
-
-.map-container .plotly {
+.plot-container {
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+}
+
+.js-plotly-plot .plotly .main-svg {
+    width: 100% !important;
+}
+
+.map-container .plotly,
+.chart-container .plotly {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
 }
 
 /* Export Buttons */
