@@ -115,10 +115,11 @@ def process_data():
         # Remove rows with NaN values in critical columns
         df = df.dropna(subset=['mass', 'reclat', 'reclong'])
 
-        # Create mass categories with more intuitive labels
+        # Create mass categories with specific boundaries (in grams)
+        mass_bins = [0, 10, 100, 1000, 10000, 1000000, float('inf')]  # 1 million grams = 1 tonne
         mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)',
                     'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
-        df['mass_category'] = pd.qcut(df['mass'], q=6, labels=mass_labels)
+        df['mass_category'] = pd.cut(df['mass'], bins=mass_bins, labels=mass_labels, right=True)
 
         # Add century classification
         df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
@@ -212,7 +213,7 @@ def create_visualizations(df):
         fig_radial.update_layout(
             title=None,
             template="plotly_dark",
-            showlegend=True,
+            showlegend=False,
             polar=dict(
                 radialaxis=dict(
                     type="log",
@@ -243,7 +244,7 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             xaxis_title="Discovered",
-            yaxis_title="No. of Meteorites",
+            yaxis_title="Total",
             showlegend=False,
             xaxis=dict(range=[1700, 2013])
         )
@@ -279,7 +280,7 @@ def create_visualizations(df):
             mapbox=dict(
                 style="carto-darkmatter",
                 center=dict(lat=0, lon=0),
-                zoom=0.5
+                zoom=0.3
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
@@ -295,12 +296,13 @@ def create_visualizations(df):
             lon=df['reclong'],
             radius=10,
             colorscale='Viridis'
+            showscale=False,
         ))
         fig_heatmap.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
                 center=dict(lat=0, lon=0),
-                zoom=0.5
+                zoom=0.3
             ),
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
