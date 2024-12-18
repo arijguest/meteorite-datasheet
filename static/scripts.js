@@ -19,6 +19,11 @@ class MeteoriteExplorer {
         this.initializeDataTable();
         this.initializeMaps();
         this.initializeEventListeners();
+        table.on('init.dt', function () {
+            // Hide the loading spinner after data has been loaded
+            $('.loading').fadeOut('slow');
+            $('#main-content').fadeIn('slow');
+        });
     }
 
     initializeDataTable() {
@@ -82,10 +87,6 @@ class MeteoriteExplorer {
                 zeroRecords: "No matching meteorites found",
                 emptyTable: "No meteorite data available"
             }
-        });
-        table.on('xhr.dt', function () {
-            // Hide the loading spinner after data has been loaded
-            $('.loading').fadeOut('slow');
         });
     }
     initializeMaps() {
