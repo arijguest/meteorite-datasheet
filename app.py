@@ -66,8 +66,8 @@ def data():
     length = int(request.args.get('length', 10))
     search_value = request.args.get('search[value]', '')
 
-    # Load your dataset (you might want to load this data once and cache it)
-    df = pd.read_csv('path_to_your_meteorite_data.csv')
+    # Load your dataset
+    df = process_data()
 
     # Filtering
     if search_value:
@@ -80,6 +80,9 @@ def data():
 
     # Pagination
     df_page = df_filtered.iloc[start:start+length]
+
+        # Select only the columns needed
+    df_page = df_page[['name', 'mass', 'year', 'recclass', 'reclat', 'reclong']]
 
     # Prepare data for JSON response
     data = df_page.to_dict('records')
