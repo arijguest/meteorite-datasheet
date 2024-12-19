@@ -337,7 +337,7 @@ def create_visualizations(df):
         fig_map.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
-                center=dict(lat=0, lon=0),
+                center=dict(lat=30, lon=30),
                 zoom=0.3
             ),
             margin=dict(l=0, r=0, t=0, b=0),
@@ -383,7 +383,7 @@ def create_visualizations(df):
         fig_heatmap.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
-                center=dict(lat=0, lon=0),
+                center=dict(lat=30, lon=30),
                 zoom=0.3
             ),
             margin=dict(l=0, r=0, t=0, b=0),
