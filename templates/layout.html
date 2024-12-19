@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meteorite Explorer | Global Analysis Dashboard</title>
     <meta name="description" content="Explore comprehensive meteorite data analysis with interactive visualizations and detailed classifications">
+    <meta name="keywords" content="Meteorite Explorer, NASA Database, Space Analysis, Meteorite Classification, Interactive Data Visualization">
+    <meta name="author" content="Meteorite Explorer Team">
+    <title>Meteorite Explorer | Global Analysis Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     
     <!-- Core CSS Dependencies -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -17,129 +22,132 @@
     <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
-    <div class="loading">
-        <div class="loading-spinner"></div>
+    <!-- Loading Overlay -->
+    <div class="loading" role="status">
+        <div class="loading-spinner" aria-label="Loading content"></div>
     </div>
 
     <div class="container-fluid">
-        <!-- Dashboard Title -->
-        <div class="dashboard-title text-center">
-            <h1><i class="fas fa-meteor"></i> Global Meteorite Explorer</h1>
+        <!-- Dashboard Header -->
+        <header class="dashboard-title text-center">
+            <h1><i class="fas fa-meteor" aria-hidden="true"></i> Global Meteorite Explorer</h1>
             <p class="lead">Unveiling Earth's Extraterrestrial Encounters Through Data</p>
+            
             <div class="dashboard-stats">
                 <div class="row mt-4">
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
-                            <i class="fas fa-globe"></i>
+                            <i class="fas fa-globe" aria-hidden="true"></i>
                             <span class="stat-value">Global Coverage</span>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
-                            <i class="fas fa-database"></i>
+                            <i class="fas fa-database" aria-hidden="true"></i>
                             <span class="stat-value">NASA Database</span>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
-                            <i class="fas fa-chart-bar"></i>
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i>
                             <span class="stat-value">Interactive Analysis</span>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-clock" aria-hidden="true"></i>
                             <span class="stat-value">Real-time Updates</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- Common Legend -->
-        <div class="common-legend chart-container">
-            <h3 class="section-title"><i class="fas fa-palette"></i> Meteorite Classification Legend</h3>
-            <div id="commonLegend" class="legend-container"></div>
-        </div>
+        <!-- Common Legend Section -->
+        <section class="common-legend chart-container">
+            <h2 class="section-title"><i class="fas fa-palette" aria-hidden="true"></i> Meteorite Classification Legend</h2>
+            <div id="commonLegend" class="legend-container" role="complementary"></div>
+        </section>
         
-        <!-- Charts Row -->
-        <div class="row">
-            <div class="col-lg-6 col-md-12 chart-container">
-                <h3 class="section-title"><i class="fas fa-chart-pie"></i> Mass Distribution Analysis</h3>
-                <div class="chart-description">
-                    Explore the relationship between meteorite classes and their mass categories
-                </div>
-                {{radial_html|safe}}
+        <!-- Charts Section -->
+        <section class="row">
+            <div class="col-lg-6 col-md-12">
+                <article class="chart-container">
+                    <h2 class="section-title"><i class="fas fa-chart-pie" aria-hidden="true"></i> Mass Distribution Analysis</h2>
+                    <p class="chart-description">Explore the relationship between meteorite classes and their mass categories</p>
+                    {{radial_html|safe}}
+                </article>
             </div>
-            <div class="col-lg-6 col-md-12 chart-container">
-                <h3 class="section-title"><i class="fas fa-history"></i> Historical Discovery Timeline</h3>
-                <div class="chart-description">
-                    Temporal analysis of meteorite discoveries across different classifications
-                </div>
-                {{time_html|safe}}
+            <div class="col-lg-6 col-md-12">
+                <article class="chart-container">
+                    <h2 class="section-title"><i class="fas fa-history" aria-hidden="true"></i> Historical Discovery Timeline</h2>
+                    <p class="chart-description">Temporal analysis of meteorite discoveries across different classifications</p>
+                    {{time_html|safe}}
+                </article>
             </div>
-        </div>
+        </section>
         
-        <!-- Maps Row -->
-        <div class="row gx=0">
-            <div class="col-lg-6 col-md-12 chart-container map-container">
-                <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Global Impact Distribution</h3>
-                <div class="chart-description">
-                    Interactive map showing meteorite landing sites with detailed information
-                </div>
-                {{map_html|safe}}
+        <!-- Maps Section -->
+        <section class="row gx-0">
+            <div class="col-lg-6 col-md-12">
+                <article class="chart-container map-container">
+                    <h2 class="section-title"><i class="fas fa-map-marked-alt" aria-hidden="true"></i> Global Impact Distribution</h2>
+                    <p class="chart-description">Interactive map showing meteorite landing sites with detailed information</p>
+                    {{map_html|safe}}
+                </article>
             </div>
-            <div class="col-lg-6 col-md-12 chart-container map-container">
-                <h3 class="section-title"><i class="fas fa-temperature-high"></i> Global Concentration Heatmap</h3>
-                <div class="chart-description">
-                    Density visualization of meteorite discoveries worldwide
-                </div>
-                {{heatmap_html|safe}}
+            <div class="col-lg-6 col-md-12">
+                <article class="chart-container map-container">
+                    <h2 class="section-title"><i class="fas fa-temperature-high" aria-hidden="true"></i> Global Concentration Heatmap</h2>
+                    <p class="chart-description">Density visualization of meteorite discoveries worldwide</p>
+                    {{heatmap_html|safe}}
+                </article>
             </div>
-        </div>
+        </section>
         
-        <!-- Classification Guide -->
-        <div class="description-table">
-            <h3 class="section-title"><i class="fas fa-book"></i> Meteorite Classification Guide</h3>
+        <!-- Classification Guide Section -->
+        <section class="description-table">
+            <h2 class="section-title"><i class="fas fa-book" aria-hidden="true"></i> Meteorite Classification Guide</h2>
             <div class="table-responsive">
                 <table class="table table-dark table-hover">
+                    <caption class="visually-hidden">Meteorite Classifications and Descriptions</caption>
                     <thead>
                         <tr>
-                            <th>Classification</th>
-                            <th>Scientific Description</th>
+                            <th scope="col">Classification</th>
+                            <th scope="col">Scientific Description</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for class, description in descriptions.items() %}
                         <tr>
-                            <td><strong>{{class}}</strong></td>
+                            <th scope="row">{{class}}</th>
                             <td>{{description}}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <!-- Database Table -->
-        <div class="chart-container">
-            <h3 class="section-title"><i class="fas fa-table"></i> Comprehensive Meteorite Database</h3>
-            <div class="table-description">
-                Detailed records of all documented meteorite discoveries
-            </div>
-            <div class="table-responsive"></div>
+        <!-- Database Section -->
+        <section class="chart-container">
+            <h2 class="section-title"><i class="fas fa-table" aria-hidden="true"></i> Comprehensive Meteorite Database</h2>
+            <p class="table-description">Detailed records of all documented meteorite discoveries</p>
+            <div class="table-responsive">
                 <table id="meteoriteTable" class="table table-dark table-hover display">
+                    <caption class="visually-hidden">Comprehensive Meteorite Database</caption>
                     <thead>
                         <tr>
-                            <th>Meteorite Name</th>
-                            <th>Classification</th>
-                            <th>Group Class</th>
-                            <th>Mass</th>
-                            <th>Discovered</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Find/Fall</th>
+                            <th scope="col">Meteorite Name</th>
+                            <th scope="col">Class</th>
+                            <th scope="col">Major Class</th>
+                            <th scope="col">Mass</th>
+                            <th scope="col">Year</th>
+                            <th scope="col">Lat</th>
+                            <th scope="col">Long</th>
+                            <th scope="col">Find/Fall</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -147,30 +155,30 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
-    
+
     <!-- Core JavaScript Dependencies -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     
     <!-- Plotly -->
-    <script src="https://cdn.plot.ly/plotly-5.11.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-5.11.0.min.js" defer></script>
     
     <!-- DataTables Core and Extensions -->
-    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.13.5/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js" defer></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js" defer></script>
+    <script src="https://cdn.datatables.net/buttons/1.13.5/js/dataTables.buttons.min.js" defer></script>
+    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.bootstrap5.min.js" defer></script>
+    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.html5.min.js" defer></script>
+    <script src="https://cdn.datatables.net/buttons/1.13.5/js/buttons.print.min.js" defer></script>
     
     <!-- Export Utilities -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.1.36/build/pdfmake.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.1.36/build/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.1.36/build/pdfmake.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.1.36/build/vfs_fonts.js" defer></script>
     
     <!-- Custom Scripts -->
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 </body>
 </html>
