@@ -345,6 +345,111 @@ def create_visualizations(df):
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
             width=1000,
+def create_visualizations(df):
+    try:
+        def format_mass(x):
+            if x >= 1e6:
+                return f"{x / 1e6:.2f} tonnes"
+            elif x >= 1e3:
+                return f"{x / 1e3:.2f} kg"
+            else:
+                return f"{x:.2f} g"
+
+        df['mass_with_units'] = df['mass'].apply(format_mass)
+        df['size'] = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
+
+        class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
+        fig_radial = go.Figure()
+
+        for mass_cat in class_mass.columns:
+            fig_radial.add_trace(go.Barpolar(
+                r=class_mass[mass_cat],
+                theta=class_mass.index,
+                name=mass_cat,
+                marker_color=[COLORS.get(cls, '#FFFFFF') for cls in class_mass.index],
+                opacity=0.8,
+                hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
+            ))
+
+        fig_radial.update_layout(
+            template="plotly_dark",
+            showlegend=False,
+            margin=dict(l=0, r=0, t=20, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            polar=dict(
+                radialaxis=dict(
+                    type="log",
+                    gridcolor="#444",
+                    linecolor="#444",
+                    showticklabels=False
+                ),
+                angularaxis=dict(
+                    gridcolor="#444",
+                    linecolor="#444"
+                )
+            )
+        )
+
+        fig_time = px.histogram(
+            df,
+            x="year",
+            color="recclass_clean",
+            color_discrete_map=COLORS,
+            labels={"year": "Discovery", "count": "Count"},
+            opacity=0.8
+        )
+
+        fig_time.update_layout(
+            template="plotly_dark",
+            yaxis_type="log",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title="Discovered",
+            yaxis_title="Total",
+            showlegend=False,
+            margin=dict(l=0, r=0, t=0, b=0),
+            xaxis=dict(range=[1700, 2013])
+        )
+
+        fig_time.update_traces(
+            hovertemplate='Discovery: %{x}<br>Class: %{customdata}<br>Count: %{y}<extra></extra>',
+            customdata=df['recclass_clean']
+        )
+
+        fig_map = px.scatter_mapbox(
+            df,
+            lat='reclat',
+            lon='reclong',
+            color='recclass',
+            size='size',
+            hover_name='name',
+            hover_data={
+                'Lat': df['reclat'],
+                'Long': df['reclong'],
+                'Class': df['recclass'],
+                'Mass': df['mass_with_units'],
+                'Year': df['year_formatted'],
+                'Fall': df['fall'],
+                'reclat': False,
+                'reclong': False,
+                'recclass': False,
+                'size': False
+            },
+            color_discrete_map=COLORS
+        )
+
+        fig_map.update_layout(
+            mapbox=dict(
+                style="carto-darkmatter",
+                center=dict(lat=0, lon=0),
+                zoom=0.3
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=800,
+            width=1000,
             showlegend=False
         )
 
@@ -383,7 +488,7 @@ def create_visualizations(df):
         fig_heatmap.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
-                center=dict(lat=30, lon=30),
+                center=dict(lat=0, lon=0),
                 zoom=0.3
             ),
             margin=dict(l=0, r=0, t=0, b=0),
@@ -394,10 +499,12 @@ def create_visualizations(df):
             showlegend=False,
             updatemenus=[{
                 'buttons': [{
-                    'args': [None, {'frame': {'duration': 500, 'redraw': True},
-                                  'fromcurrent': True,
-                                  'transition': {'duration': 0},
-                                  'mode': 'immediate'}],
+                    'args': [None, {
+                        'frame': {'duration': 500, 'redraw': True},
+                        'fromcurrent': True,
+                        'transition': {'duration': 0},
+                        'mode': 'immediate'
+                    }],
                     'label': 'Play',
                     'method': 'animate'
                 }],
@@ -405,22 +512,37 @@ def create_visualizations(df):
                 'pad': {'r': 10, 't': 87},
                 'showactive': False,
                 'type': 'buttons',
-                'visible': False,
-                'loop': True
+                'visible': False
             }]
         )
+
+        animation_script = """
+        <script>
+        function animate() {
+            Plotly.animate('heatmap', null, {
+                frame: {duration: 500, redraw: true},
+                transition: {duration: 0},
+                mode: 'immediate',
+                fromcurrent: true
+            }).then(function() {
+                requestAnimationFrame(animate);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', animate);
+        </script>
+        """
 
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
-        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
+        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap') + animation_script
 
         return radial_html, time_html, map_html, heatmap_html
 
     except Exception as e:
         logger.error(f"Error creating visualizations: {e}")
         return '', '', '', ''
-
+        
 @app.route("/")
 def home():
     try:
