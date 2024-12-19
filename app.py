@@ -399,14 +399,14 @@ def create_visualizations(df):
                                   'transition': {'duration': 0},
                                   'mode': 'immediate'}],
                     'label': 'Play',
-                    'method': 'animate',
-                    'loop': True
+                    'method': 'animate'
                 }],
                 'direction': 'left',
                 'pad': {'r': 10, 't': 87},
                 'showactive': False,
                 'type': 'buttons',
-                'visible': False
+                'visible': False,
+                'loop': True
             }]
         )
 
