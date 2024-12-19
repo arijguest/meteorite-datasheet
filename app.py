@@ -265,15 +265,22 @@ def create_visualizations(df):
 
         # Create frames with decreasing opacities
         frames = []
+        # Pre-calculate year blocks to avoid repeated calculations
+        year_blocks = sorted(df_animation['year_block'].unique())[-20:]  # Limit to last 20 blocks
+
         for current_block in year_blocks:
+            # Simplified block inclusion
             blocks_to_include = [current_block, current_block - 3, current_block - 6]
             opacities = [0.8, 0.4, 0.2]
             
-            mask = df_animation['year_block'].isin(blocks_to_include)
-            df_frame = df_animation[mask].copy()
-            df_frame['opacity'] = df_frame['year_block'].apply(
-                lambda x: opacities[blocks_to_include.index(x)] if x in blocks_to_include else 0
-            )
+            # Use boolean indexing instead of isin() for better performance
+            mask = (df_animation['year_block'] >= current_block - 6) & (df_animation['year_block'] <= current_block)
+            df_frame = df_animation[mask]
+            
+            # Vectorized opacity assignment instead of apply
+            opacity_map = dict(zip(blocks_to_include, opacities))
+            df_frame['opacity'] = df_frame['year_block'].map(opacity_map).fillna(0)
+
 
             frame = go.Frame(
                 data=[go.Scattermapbox(
