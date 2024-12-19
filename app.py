@@ -256,67 +256,60 @@ def create_visualizations(df):
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
         logger.info("Radial plot created.")
 
-        # Limit data for animations to the specified years
+        # Prepare data for animations
         df_animation = df[(df['year'] >= 1700) & (df['year'] <= 2013)].copy()
         df_animation['year'] = df_animation['year'].astype(int)
+        df_animation['year_block'] = (df_animation['year'] // 3) * 3
+        year_blocks = sorted(df_animation['year_block'].unique())
         logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
 
-        # Sort data by year and prepare for animation
-        df_animation = df_animation.sort_values('year')
-        years = df_animation['year'].unique()
-
-        # Create the base trace with all data points
-        base_trace = go.Scattermapbox(
-            lat=df_animation['reclat'],
-            lon=df_animation['reclong'],
-            mode='markers',
-            marker=dict(
-                size=df_animation['size'],
-                color=df_animation['recclass_clean'].map(COLORS),
-                opacity=0
-            ),
-            customdata=np.stack((
-                df_animation['name'],
-                df_animation['recclass'],
-                df_animation['mass_with_units'],
-                df_animation['year_formatted'],
-                df_animation['fall'],
-                df_animation['reclat'],
-                df_animation['reclong']
-            ), axis=-1),
-            hovertemplate=(
-                'Name: %{customdata[0]}<br>' +
-                'Class: %{customdata[1]}<br>' +
-                'Mass: %{customdata[2]}<br>' +
-                'Year: %{customdata[3]}<br>' +
-                'Fall: %{customdata[4]}<br>' +
-                'Lat: %{customdata[5]}<br>' +
-                'Long: %{customdata[6]}<extra></extra>'
-            )
-        )
-
-        # Create frames for the animation
+        # Create frames with decreasing opacities
         frames = []
-        for year in years:
+        for current_block in year_blocks:
+            blocks_to_include = [current_block, current_block - 3, current_block - 6]
+            opacities = [0.8, 0.4, 0.2]
+            
+            mask = df_animation['year_block'].isin(blocks_to_include)
+            df_frame = df_animation[mask].copy()
+            df_frame['opacity'] = df_frame['year_block'].apply(
+                lambda x: opacities[blocks_to_include.index(x)] if x in blocks_to_include else 0
+            )
+
             frame = go.Frame(
                 data=[go.Scattermapbox(
-                    lat=df_animation['reclat'],
-                    lon=df_animation['reclong'],
+                    lat=df_frame['reclat'],
+                    lon=df_frame['reclong'],
                     mode='markers',
                     marker=dict(
-                        size=df_animation['size'],
-                        color=df_animation['recclass_clean'].map(COLORS),
-                        opacity=(df_animation['year'] <= year).astype(float)
+                        size=df_frame['size'],
+                        color=df_frame['recclass_clean'].map(COLORS),
+                        opacity=df_frame['opacity']
                     ),
-                    customdata=base_trace.customdata,
-                    hovertemplate=base_trace.hovertemplate
+                    customdata=np.stack((
+                        df_frame['name'],
+                        df_frame['recclass'],
+                        df_frame['mass_with_units'],
+                        df_frame['year_formatted'],
+                        df_frame['fall'],
+                        df_frame['reclat'],
+                        df_frame['reclong']
+                    ), axis=-1),
+                    hovertemplate=(
+                        'Name: %{customdata[0]}<br>' +
+                        'Class: %{customdata[1]}<br>' +
+                        'Mass: %{customdata[2]}<br>' +
+                        'Year: %{customdata[3]}<br>' +
+                        'Fall: %{customdata[4]}<br>' +
+                        'Lat: %{customdata[5]}<br>' +
+                        'Long: %{customdata[6]}<extra></extra>'
+                    )
                 )],
-                name=str(year)
+                name=str(current_block)
             )
             frames.append(frame)
 
         # Create the map figure
-        fig_map = go.Figure(data=[base_trace], frames=frames)
+        fig_map = go.Figure(data=frames[0].data, frames=frames)
         fig_map.update_layout(
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
@@ -327,7 +320,7 @@ def create_visualizations(df):
                     'label': 'Play',
                     'method': 'animate',
                     'args': [None, {
-                        'frame': {'duration': 100, 'redraw': True},
+                        'frame': {'duration': 500, 'redraw': True},
                         'fromcurrent': True,
                         'transition': {'duration': 0}
                     }]
@@ -338,85 +331,21 @@ def create_visualizations(df):
             }],
             sliders=[{
                 'active': 0,
-                'currentvalue': {'prefix': 'Year: '},
+                'currentvalue': {'prefix': 'Year Block: '},
                 'pad': {'t': 50},
                 'steps': [{
                     'method': 'animate',
-                    'label': str(year),
-                    'args': [[str(year)], {
+                    'label': str(block),
+                    'args': [[str(block)], {
                         'frame': {'duration': 0, 'redraw': True},
                         'mode': 'immediate',
                         'transition': {'duration': 0}
                     }]
-                } for year in years]
+                } for block in year_blocks]
             }]
         )
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
-
-        # Create the heatmap visualization
-        logger.info("Creating cumulative animated heatmap.")
-        frames_heatmap = []
-        for year in years:
-            mask = df_animation['year'] <= year
-            frame = go.Frame(
-                data=[go.Densitymapbox(
-                    lat=df_animation[mask]['reclat'],
-                    lon=df_animation[mask]['reclong'],
-                    radius=10,
-                    colorscale='Viridis',
-                    showscale=False,
-                )],
-                name=str(year)
-            )
-            frames_heatmap.append(frame)
-
-        fig_heatmap = go.Figure(
-            data=[go.Densitymapbox(
-                lat=[],
-                lon=[],
-                radius=10,
-                colorscale='Viridis',
-                showscale=False,
-            )],
-            frames=frames_heatmap
-        )
-        fig_heatmap.update_layout(
-            mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-            updatemenus=[{
-                'type': 'buttons',
-                'buttons': [{
-                    'label': 'Play',
-                    'method': 'animate',
-                    'args': [None, {
-                        'frame': {'duration': 100, 'redraw': True},
-                        'fromcurrent': True,
-                        'transition': {'duration': 0}
-                    }]
-                }],
-                'showactive': False,
-                'x': 0.1,
-                'y': 0,
-            }],
-            sliders=[{
-                'active': 0,
-                'currentvalue': {'prefix': 'Year: '},
-                'pad': {'t': 50},
-                'steps': [{
-                    'method': 'animate',
-                    'label': str(year),
-                    'args': [[str(year)], {
-                        'frame': {'duration': 0, 'redraw': True},
-                        'mode': 'immediate',
-                        'transition': {'duration': 0}
-                    }]
-                } for year in years]
-            }]
-        )
-        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
-        logger.info("Heatmap visualization created.")
 
         # Time Distribution Plot
         logger.info("Creating time distribution plot.")
@@ -427,7 +356,7 @@ def create_visualizations(df):
             color_discrete_map=COLORS,
             labels={"year": "Year", "count": "Count"},
             opacity=0.8,
-            nbins=(2013 - 1700 + 1)
+            nbins=len(year_blocks)
         )
         fig_time.update_layout(
             template="plotly_dark",
@@ -447,9 +376,9 @@ def create_visualizations(df):
         visualizations_cache['radial_html'] = radial_html
         visualizations_cache['time_html'] = time_html
         visualizations_cache['map_html'] = map_html
-        visualizations_cache['heatmap_html'] = heatmap_html
+        visualizations_cache['heatmap_html'] = ''
 
-        return radial_html, time_html, map_html, heatmap_html
+        return radial_html, time_html, map_html, ''
 
     except Exception as e:
         logger.exception(f"Error creating visualizations: {e}")
