@@ -106,23 +106,52 @@ def classify_meteorite(recclass):
         return 'Unknown'
     else:
         return 'Other'
+
 def process_data():
     try:
         # Centralized data import
         data_file = 'meteorite_data.csv'
 
-        if not os.path.exists(data_file):
-            # Fetch data from the updated NASA API endpoint (CSV format for efficiency)
-            data_url = "https://data.nasa.gov/resource/y77d-th95.csv?$limit=50000"
+        # Fetch the count from the NASA API
+        count_url = "https://data.nasa.gov/resource/y77d-th95.json?$select=count(*)"
+        response = requests.get(count_url)
+        response.raise_for_status()
+        count_data = response.json()
+        api_count = int(count_data[0]['count'])
 
-            # Use pandas to directly read CSV data from the URL
-            df = pd.read_csv(data_url)
-
-            # Save a local copy for future use
-            df.to_csv(data_file, index=False)
-        else:
+        # Check if the local data file exists
+        if os.path.exists(data_file):
             # Load data from the local CSV file
             df = pd.read_csv(data_file, on_bad_lines='skip')
+            local_count = len(df)
+            logger.info(f"Local data has {local_count} records. API data has {api_count} records.")
+
+            # Compare counts
+            if local_count != api_count:
+                logger.info("Local data is outdated. Fetching updated data from API.")
+                # Fetch data from the NASA API endpoint (CSV format for efficiency)
+                data_url = "https://data.nasa.gov/resource/y77d-th95.csv?$limit=50000"
+                df = pd.read_csv(data_url)
+                # Save a local copy for future use
+                df.to_csv(data_file, index=False)
+            else:
+                logger.info("Local data is up to date.")
+        else:
+            logger.info("Local data file not found. Fetching data from API.")
+            # Fetch data from the NASA API endpoint (CSV format for efficiency)
+            data_url = "https://data.nasa.gov/resource/y77d-th95.csv?$limit=50000"
+            df = pd.read_csv(data_url)
+            df.to_csv(data_file, index=False)
+
+        # Required columns
+        required_columns = ['name', 'mass', 'year', 'reclat', 'reclong', 'recclass']
+
+        # Check if required columns are present
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            error_msg = f"Missing columns in data: {missing_columns}"
+            logger.error(error_msg)
+            raise KeyError(error_msg)
 
         # Process data
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
@@ -141,17 +170,24 @@ def process_data():
         df['mass_category'] = pd.cut(df['mass'], bins=mass_bins, labels=mass_labels, right=True)
 
         # Add century classification
-        df['century'] = df['year'].apply(lambda x: f"{int(x // 100 + 1)}th Century" if pd.notnull(x) else "Unknown")
+        df['century'] = df['year'].apply(
+            lambda x: f"{int(x // 100 + 1)}th Century" if pd.notnull(x) else "Unknown"
+        )
 
         # Enhanced data formatting
-        df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown")
-        df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
+        df['mass_formatted'] = df['mass'].apply(
+            lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown"
+        )
+        df['year_formatted'] = df['year'].apply(
+            lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown"
+        )
 
         return df
 
     except Exception as e:
         logger.error(f"Error processing data: {e}")
-        return pd.DataFrame()
+        raise  # Re-raise the exception to be handled by the caller
+
 
 # Load and process data when the app starts
 def load_data():
