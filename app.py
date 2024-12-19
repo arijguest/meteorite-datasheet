@@ -96,17 +96,24 @@ def classify_meteorite(recclass):
         return 'Other'
 def process_data():
     try:
-        # Fetch data only if df_global is None
-        if not os.path.exists('meteorite_data.csv'):
-            response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json?$limit=50000", timeout=10)
-            response.raise_for_status()
-            df = pd.DataFrame(response.json())
-            df.to_csv('meteorite_data.csv', index=False)
+        # Centralized data import
+        data_file = 'meteorite_data.csv'
+
+        if not os.path.exists(data_file):
+            # Fetch data from the updated NASA API endpoint (CSV format for efficiency)
+            data_url = "https://data.nasa.gov/resource/y77d-th95.csv?$limit=50000"
+
+            # Use pandas to directly read CSV data from the URL
+            df = pd.read_csv(data_url)
+
+            # Save a local copy for future use
+            df.to_csv(data_file, index=False)
         else:
-            df = pd.read_csv('meteorite_data.csv', on_bad_lines='skip')
+            # Load data from the local CSV file
+            df = pd.read_csv(data_file, on_bad_lines='skip')
 
         # Process data
-        df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
+        df['mass'] = pd.to_numeric(df['mass (g)'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
@@ -118,17 +125,18 @@ def process_data():
         # Create mass categories with specific boundaries (in grams)
         mass_bins = [0, 10, 100, 1000, 10000, 1000000, float('inf')]  # 1 million grams = 1 tonne
         mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)',
-                    'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
+                       'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
         df['mass_category'] = pd.cut(df['mass'], bins=mass_bins, labels=mass_labels, right=True)
 
         # Add century classification
-        df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
+        df['century'] = df['year'].apply(lambda x: f"{int(x // 100 + 1)}th Century" if pd.notnull(x) else "Unknown")
 
         # Enhanced data formatting
         df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown")
         df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
 
         return df
+
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         return pd.DataFrame()
