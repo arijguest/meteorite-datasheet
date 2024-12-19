@@ -273,14 +273,13 @@ def create_visualizations(df):
             blocks_to_include = [current_block, current_block - 3, current_block - 6]
             opacities = [0.8, 0.4, 0.2]
             
-            # Use boolean indexing instead of isin() for better performance
+            # Use boolean indexing with .loc for better performance
             mask = (df_animation['year_block'] >= current_block - 6) & (df_animation['year_block'] <= current_block)
-            df_frame = df_animation[mask]
+            df_frame = df_animation.loc[mask].copy()
             
-            # Vectorized opacity assignment instead of apply
+            # Vectorized opacity assignment using .loc
             opacity_map = dict(zip(blocks_to_include, opacities))
-            df_frame['opacity'] = df_frame['year_block'].map(opacity_map).fillna(0)
-
+            df_frame.loc[:, 'opacity'] = df_frame['year_block'].map(opacity_map).fillna(0)
 
             frame = go.Frame(
                 data=[go.Scattermapbox(
