@@ -261,90 +261,108 @@ def create_visualizations(df):
         df_animation['year'] = df_animation['year'].astype(int)
         logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
 
-        # Create cumulative data for each year for the animated global map
-        logger.info("Creating cumulative animated global map.")
+        # Sort data by year and prepare for animation
         df_animation = df_animation.sort_values('year')
         years = df_animation['year'].unique()
-        frames_map = []
+
+        # Create the base trace with all data points
+        base_trace = go.Scattermapbox(
+            lat=df_animation['reclat'],
+            lon=df_animation['reclong'],
+            mode='markers',
+            marker=dict(
+                size=df_animation['size'],
+                color=df_animation['recclass_clean'].map(COLORS),
+                opacity=0
+            ),
+            customdata=np.stack((
+                df_animation['name'],
+                df_animation['recclass'],
+                df_animation['mass_with_units'],
+                df_animation['year_formatted'],
+                df_animation['fall'],
+                df_animation['reclat'],
+                df_animation['reclong']
+            ), axis=-1),
+            hovertemplate=(
+                'Name: %{customdata[0]}<br>' +
+                'Class: %{customdata[1]}<br>' +
+                'Mass: %{customdata[2]}<br>' +
+                'Year: %{customdata[3]}<br>' +
+                'Fall: %{customdata[4]}<br>' +
+                'Lat: %{customdata[5]}<br>' +
+                'Long: %{customdata[6]}<extra></extra>'
+            )
+        )
+
+        # Create frames for the animation
+        frames = []
         for year in years:
-            df_cumulative = df_animation[df_animation['year'] <= year]
             frame = go.Frame(
                 data=[go.Scattermapbox(
-                    lat=df_cumulative['reclat'],
-                    lon=df_cumulative['reclong'],
+                    lat=df_animation['reclat'],
+                    lon=df_animation['reclong'],
                     mode='markers',
-                    marker=go.scattermapbox.Marker(
-                        size=df_cumulative['size'],
-                        color=df_cumulative['recclass_clean'].map(COLORS),
-                        opacity=0.8
+                    marker=dict(
+                        size=df_animation['size'],
+                        color=df_animation['recclass_clean'].map(COLORS),
+                        opacity=(df_animation['year'] <= year).astype(float)
                     ),
-                    hovertext=df_cumulative['name'],
-                    hoverinfo='text',
-                    customdata=np.stack((
-                        df_cumulative['name'],
-                        df_cumulative['recclass'],
-                        df_cumulative['mass_with_units'],
-                        df_cumulative['year_formatted'],
-                        df_cumulative['fall'],
-                        df_cumulative['reclat'],
-                        df_cumulative['reclong']
-                    ), axis=-1),
-                    hovertemplate=(
-                        'Name: %{customdata[0]}<br>' +
-                        'Class: %{customdata[1]}<br>' +
-                        'Mass: %{customdata[2]}<br>' +
-                        'Year: %{customdata[3]}<br>' +
-                        'Fall: %{customdata[4]}<br>' +
-                        'Lat: %{customdata[5]}<br>' +
-                        'Long: %{customdata[6]}<extra></extra>'
-                    )
+                    customdata=base_trace.customdata,
+                    hovertemplate=base_trace.hovertemplate
                 )],
                 name=str(year)
             )
-            frames_map.append(frame)
+            frames.append(frame)
 
-        # Create initial empty figure
-        fig_map = go.Figure(
-            data=[go.Scattermapbox(
-                lat=[],
-                lon=[],
-                mode='markers',
-                marker=go.scattermapbox.Marker(
-                    size=[],
-                    color=[],
-                    opacity=0.8
-                ),
-                hoverinfo='text'
-            )],
-            frames=frames_map
-        )
-
-        # Configure layout
+        # Create the map figure
+        fig_map = go.Figure(data=[base_trace], frames=frames)
         fig_map.update_layout(
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
-            updatemenus=[],
-            sliders=[],
-            transition={'duration': 0}
+            updatemenus=[{
+                'type': 'buttons',
+                'buttons': [{
+                    'label': 'Play',
+                    'method': 'animate',
+                    'args': [None, {
+                        'frame': {'duration': 100, 'redraw': True},
+                        'fromcurrent': True,
+                        'transition': {'duration': 0}
+                    }]
+                }],
+                'showactive': False,
+                'x': 0.1,
+                'y': 0,
+            }],
+            sliders=[{
+                'active': 0,
+                'currentvalue': {'prefix': 'Year: '},
+                'pad': {'t': 50},
+                'steps': [{
+                    'method': 'animate',
+                    'label': str(year),
+                    'args': [[str(year)], {
+                        'frame': {'duration': 0, 'redraw': True},
+                        'mode': 'immediate',
+                        'transition': {'duration': 0}
+                    }]
+                } for year in years]
+            }]
         )
-        for frame in fig_map.frames:
-            frame['layout'] = go.Layout(transition={'duration': 0})
-
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
 
-        # Cumulative Animated Heatmap using years
+        # Create the heatmap visualization
         logger.info("Creating cumulative animated heatmap.")
-        df_sorted = df_animation
-        years = df_sorted['year'].unique()
         frames_heatmap = []
         for year in years:
-            df_cumulative = df_sorted[df_sorted['year'] <= year]
+            mask = df_animation['year'] <= year
             frame = go.Frame(
                 data=[go.Densitymapbox(
-                    lat=df_cumulative['reclat'],
-                    lon=df_cumulative['reclong'],
+                    lat=df_animation[mask]['reclat'],
+                    lon=df_animation[mask]['reclong'],
                     radius=10,
                     colorscale='Viridis',
                     showscale=False,
@@ -367,16 +385,40 @@ def create_visualizations(df):
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
-            updatemenus=[],
-            sliders=[],
-            transition={'duration': 0}
+            updatemenus=[{
+                'type': 'buttons',
+                'buttons': [{
+                    'label': 'Play',
+                    'method': 'animate',
+                    'args': [None, {
+                        'frame': {'duration': 100, 'redraw': True},
+                        'fromcurrent': True,
+                        'transition': {'duration': 0}
+                    }]
+                }],
+                'showactive': False,
+                'x': 0.1,
+                'y': 0,
+            }],
+            sliders=[{
+                'active': 0,
+                'currentvalue': {'prefix': 'Year: '},
+                'pad': {'t': 50},
+                'steps': [{
+                    'method': 'animate',
+                    'label': str(year),
+                    'args': [[str(year)], {
+                        'frame': {'duration': 0, 'redraw': True},
+                        'mode': 'immediate',
+                        'transition': {'duration': 0}
+                    }]
+                } for year in years]
+            }]
         )
-        for frame in fig_heatmap.frames:
-            frame['layout'] = go.Layout(transition={'duration': 0})
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
         logger.info("Heatmap visualization created.")
 
-        # Time Distribution Plot using years
+        # Time Distribution Plot
         logger.info("Creating time distribution plot.")
         fig_time = px.histogram(
             df_animation,
