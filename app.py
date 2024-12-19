@@ -353,6 +353,70 @@ def create_visualizations(df):
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
 
+        # Create the heatmap visualization
+        logger.info("Creating cumulative animated heatmap.")
+        frames_heatmap = []
+        for year in years:
+            mask = df_animation['year'] <= year
+            frame = go.Frame(
+                data=[go.Densitymapbox(
+                    lat=df_animation[mask]['reclat'],
+                    lon=df_animation[mask]['reclong'],
+                    radius=10,
+                    colorscale='Viridis',
+                    showscale=False,
+                )],
+                name=str(year)
+            )
+            frames_heatmap.append(frame)
+
+        fig_heatmap = go.Figure(
+            data=[go.Densitymapbox(
+                lat=[],
+                lon=[],
+                radius=10,
+                colorscale='Viridis',
+                showscale=False,
+            )],
+            frames=frames_heatmap
+        )
+        fig_heatmap.update_layout(
+            mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
+            margin=dict(l=0, r=0, t=0, b=0),
+            showlegend=False,
+            updatemenus=[{
+                'type': 'buttons',
+                'buttons': [{
+                    'label': 'Play',
+                    'method': 'animate',
+                    'args': [None, {
+                        'frame': {'duration': 100, 'redraw': True},
+                        'fromcurrent': True,
+                        'transition': {'duration': 0}
+                    }]
+                }],
+                'showactive': False,
+                'x': 0.1,
+                'y': 0,
+            }],
+            sliders=[{
+                'active': 0,
+                'currentvalue': {'prefix': 'Year: '},
+                'pad': {'t': 50},
+                'steps': [{
+                    'method': 'animate',
+                    'label': str(year),
+                    'args': [[str(year)], {
+                        'frame': {'duration': 0, 'redraw': True},
+                        'mode': 'immediate',
+                        'transition': {'duration': 0}
+                    }]
+                } for year in years]
+            }]
+        )
+        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
+        logger.info("Heatmap visualization created.")
+
         # Time Distribution Plot
         logger.info("Creating time distribution plot.")
         fig_time = px.histogram(
