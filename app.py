@@ -399,7 +399,8 @@ def create_visualizations(df):
                                   'transition': {'duration': 0},
                                   'mode': 'immediate'}],
                     'label': 'Play',
-                    'method': 'animate'
+                    'method': 'animate',
+                    'loop': True
                 }],
                 'direction': 'left',
                 'pad': {'r': 10, 't': 87},
