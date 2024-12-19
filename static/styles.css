@@ -82,6 +82,12 @@ body {
     box-shadow: var(--box-shadow-hover);
 }
 
+.col-lg-6,
+.col-md-12 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 /* Map Container */
 .map-container { 
     height: 600px;
