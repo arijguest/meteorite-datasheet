@@ -1,8 +1,34 @@
-/* Modern Dark Theme with Enhanced UI */
+/* Core Variables */
+:root {
+    --primary-bg: #121212;
+    --secondary-bg: #1a1a1a;
+    --tertiary-bg: #2d2d2d;
+    --accent-color: #4ECDC4;
+    --accent-hover: #45B7D1;
+    --text-color: #ffffff;
+    --text-muted: #ccc;
+    --border-color: #333;
+    --border-accent: #4ECDC4;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --border-radius: 15px;
+    --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    --box-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.3);
+    --transition-speed: 0.3s;
+    --transition-ease: ease;
+}
+
+/* Global Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Base Styles */
 body { 
-    background-color: #121212; 
-    color: #ffffff; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-family: var(--font-family);
     line-height: 1.6;
 }
 
@@ -12,7 +38,7 @@ body {
     margin: 0 auto;
 }
 
-/* Legend Container Styling */
+/* Legend Styling */
 .common-legend .legend-container {
     display: flex;
     flex-wrap: wrap;
@@ -24,7 +50,6 @@ body {
     display: flex;
     align-items: center;
     font-size: 1em;
-    color: #fff;
 }
 
 .legend-color-box {
@@ -34,89 +59,102 @@ body {
     border-radius: 4px;
 }
 
-/* Chart Containers */
-.chart-container { 
-    margin-bottom: 30px; 
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+/* Container Styles */
+.chart-container,
+.description-table,
+.dataTables_wrapper,
+.dashboard-title { 
+    background: linear-gradient(145deg, var(--secondary-bg), var(--tertiary-bg));
+    border-radius: var(--border-radius);
     padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 30px;
+    box-shadow: var(--box-shadow);
+}
+
+.chart-container {
+    transition: transform var(--transition-speed) var(--transition-ease),
+                box-shadow var(--transition-speed) var(--transition-ease);
 }
 
 .chart-container:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--box-shadow-hover);
 }
 
-/* Description Table Styling */
-.description-table { 
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+/* Map Container */
+.map-container { 
+    height: 600px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
 }
 
+/* Plotly Elements */
+.plot-container,
+.js-plotly-plot,
+.plotly,
+.map-container .plotly,
+.chart-container .plotly {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+.map-container .plotly .main-svg,
+.chart-container .plotly .main-svg {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+.plotly .modebar {
+    margin: 0 !important;
+}
+
+/* Table Styling */
 .description-table table {
     border-collapse: separate;
     border-spacing: 0 8px;
     width: 100%;
 }
 
-.description-table th, .description-table td {
+.description-table th,
+.description-table td {
     padding: 12px 15px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .description-table tr:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Map Container */
-.map-container { 
-    height: 600px;
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-/* DataTables Styling */
-.dataTables_wrapper {
-    padding: 25px;
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-    border-radius: 15px;
-    margin-top: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-/* Pagination Controls */
+/* DataTables Components */
 .dataTables_paginate {
     margin-top: 20px !important;
     padding-top: 20px !important;
-    border-top: 1px solid #444;
+    border-top: 1px solid var(--border-color);
 }
 
 .paginate_button {
     padding: 8px 16px !important;
     margin: 0 4px !important;
     border-radius: 8px !important;
-    background: #333 !important;
-    color: #fff !important;
+    background: var(--tertiary-bg) !important;
+    color: var(--text-color) !important;
     border: none !important;
-    transition: all 0.3s ease !important;
+    transition: background var(--transition-speed) var(--transition-ease) !important;
 }
 
-.paginate_button:hover {
-    background: #4ECDC4 !important;
-    color: #fff !important;
-}
-
+.paginate_button:hover,
 .paginate_button.current {
-    background: #4ECDC4 !important;
-    color: #fff !important;
+    background: var(--accent-color) !important;
 }
 
-/* Enhanced Table Search */
+/* Search and Filter Controls */
 .dataTables_filter {
     margin-bottom: 20px;
     width: 100%;
@@ -124,46 +162,36 @@ body {
 
 .dataTables_filter input {
     width: 100% !important;
-    background: #2d2d2d !important;
-    border: 2px solid #4ECDC4 !important;
-    color: white !important;
+    background: var(--tertiary-bg) !important;
+    border: 2px solid var(--border-accent) !important;
+    color: var(--text-color) !important;
     padding: 12px 20px !important;
     border-radius: 8px !important;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed) var(--transition-ease);
     margin-left: 0 !important;
 }
 
 .dataTables_filter input:focus {
     box-shadow: 0 0 15px rgba(78, 205, 196, 0.3) !important;
-    border-color: #45B7D1 !important;
+    border-color: var(--accent-hover) !important;
     outline: none;
 }
 
 .dataTables_filter label {
     width: 100%;
-    color: #ccc !important;
+    color: var(--text-muted) !important;
 }
 
-/* Length Menu Styling */
-.dataTables_length {
-    margin-bottom: 20px;
+/* DataTable Core */
+table.dataTable {
+    width: 100% !important;
 }
 
-.dataTables_length select {
-    background: #2d2d2d !important;
-    border: 2px solid #4ECDC4 !important;
-    color: white !important;
-    padding: 8px 15px !important;
-    border-radius: 8px !important;
-    margin: 0 10px;
-}
-
-/* Table Header and Cells */
 table.dataTable thead th {
-    background-color: #2d2d2d;
-    color: #4ECDC4;
+    background-color: var(--tertiary-bg);
+    color: var(--accent-color);
     padding: 15px !important;
-    border-bottom: 2px solid #4ECDC4 !important;
+    border-bottom: 2px solid var(--border-accent) !important;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -171,106 +199,60 @@ table.dataTable thead th {
 
 table.dataTable tbody td {
     padding: 12px 15px !important;
-    border-bottom: 1px solid #333 !important;
-    transition: background-color 0.3s ease;
+    border-bottom: 1px solid var(--border-color) !important;
+    transition: background-color var(--transition-speed) var(--transition-ease);
 }
 
 table.dataTable tbody tr:hover td {
     background-color: rgba(78, 205, 196, 0.1);
 }
 
-/* Plotly Plots */
-
-.plot-container,
-.js-plotly-plot,
-.plotly {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important; /* Ensure plots fill their containers */
-}
-
-.map-container .plotly,
-.chart-container .plotly {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-}
-
-.js-plotly-plot .plotly .main-svg {
-    width: 100% !important;
-}
-
-.plotly .modebar {
-    margin: 0 !important; /* Remove default Plotly margins */
-}
-
-
 /* Export Buttons */
 .dt-buttons {
     margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .dt-button {
     background: linear-gradient(145deg, #333, #444) !important;
-    color: white !important;
+    color: var(--text-color) !important;
     border: none !important;
     border-radius: 8px !important;
     padding: 10px 20px !important;
     margin: 5px !important;
-    transition: all 0.3s ease !important;
+    transition: all var(--transition-speed) var(--transition-ease) !important;
     text-transform: uppercase;
     font-size: 0.9em;
     letter-spacing: 0.5px;
 }
 
 .dt-button:hover {
-    background: linear-gradient(145deg, #4ECDC4, #45B7D1) !important;
+    background: linear-gradient(145deg, var(--accent-color), var(--accent-hover)) !important;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
 }
 
 /* Dashboard Title */
-.dashboard-title {
-    text-align: center;
-    padding: 30px;
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-    border-radius: 15px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
 .dashboard-title h1 {
     font-size: 2.5em;
     font-weight: 700;
     margin-bottom: 10px;
-    background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+    background: linear-gradient(45deg, var(--accent-color), var(--accent-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .dashboard-title .lead {
     font-size: 1.2em;
-    color: #ccc;
-}
-
-/* Section Titles */
-.section-title {
-    color: #4ECDC4;
-    margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 1.5em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--text-muted);
 }
 
 /* Loading Animation */
 .loading {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(18, 18, 18, 0.9);
     display: flex;
     justify-content: center;
@@ -281,8 +263,8 @@ table.dataTable tbody tr:hover td {
 .loading-spinner {
     width: 50px;
     height: 50px;
-    border: 5px solid #333;
-    border-top: 5px solid #4ECDC4;
+    border: 5px solid var(--border-color);
+    border-top: 5px solid var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -294,75 +276,18 @@ table.dataTable tbody tr:hover td {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .container-fluid {
-        padding: 10px;
-    }
-    
-    .dashboard-title h1 {
-        font-size: 2em;
-    }
-    
-    .chart-container {
-        padding: 15px;
-    }
-    
-    .dataTables_filter input {
-        width: 100% !important;
-    }
-    
-    .dt-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .map-container {
-        height: 400px;
-    }
+    .container-fluid { padding: 10px; }
+    .dashboard-title h1 { font-size: 2em; }
+    .chart-container { padding: 15px; }
+    .map-container { height: 400px; }
+    .dt-buttons { justify-content: center; }
 }
 
-/* Fix for DataTable responsiveness */
-table.dataTable {
-    width: 100% !important;
-}
-
-/* Adjustments for meteorite-datasheet */
-table#meteoriteTable {
-    width: 100% !important;
-}
-
-table#meteoriteTable thead th {
-    white-space: nowrap;
-}
-
-table#meteoriteTable tbody td {
-    white-space: nowrap;
-}
-
-/* Fix for buttons alignment */
-.dt-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.dt-buttons .dt-button {
-    margin: 5px;
-}
-
-/* Adjust table responsiveness */
 @media (max-width: 576px) {
-    .dataTables_wrapper .dataTables_filter {
-        float: none;
-        text-align: center;
-    }
-
+    .dataTables_wrapper .dataTables_filter,
     .dataTables_wrapper .dataTables_length {
         float: none;
         text-align: center;
     }
-
-    .dt-buttons {
-        justify-content: center;
-    }
+    .dt-buttons { justify-content: center; }
 }
