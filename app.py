@@ -368,7 +368,7 @@ def create_visualizations(df):
             margin=dict(l=0, r=0, t=0, b=0),
             xaxis=dict(range=[df_animation['decade'].min(), df_animation['decade'].max()]),
         )
-                time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
+        time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
         logger.info("Time distribution plot created.")
 
         # Store visualizations in cache
