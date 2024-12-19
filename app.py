@@ -317,34 +317,7 @@ def create_visualizations(df):
             lat='reclat',
             lon='reclong',
             color='recclass',
-            size='size',
-            hover_name='name',
-            hover_data={
-                'Lat': df['reclat'],
-                'Long': df['reclong'],
-                'Class': df['recclass'],
-                'Mass': df['mass_with_units'],
-                'Year': df['year_formatted'],
-                'Fall': df['fall'],
-                'reclat': False,
-                'reclong': False,
-                'recclass': False,
-                'size': False
-            },
-            color_discrete_map=COLORS
-        )
 
-        fig_map.update_layout(
-            mapbox=dict(
-                style="carto-darkmatter",
-                center=dict(lat=30, lon=30),
-                zoom=0.3
-            ),
-            margin=dict(l=0, r=0, t=0, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            height=800,
-            width=1000,
 def create_visualizations(df):
     try:
         def format_mass(x):
