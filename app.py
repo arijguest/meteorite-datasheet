@@ -293,13 +293,10 @@ def create_visualizations(df):
             showlegend=False,
             updatemenus=[],
             sliders=[],
+            transition={'duration': 0}
         )
-        # Configure animation settings for autoplay and loop
-        fig_map.layout.updatemenus = []
-        fig_map.update_layout(transition={'duration': 0})
-        fig_map.update_frames([frame.update(layout=dict(transition={'duration': 0})) for frame in fig_map.frames])
-        fig_map.layout.autoplay = True
-        fig_map.layout.loop = True
+        for frame in fig_map.frames:
+            frame['layout'] = go.Layout(transition={'duration': 0})
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
 
@@ -338,13 +335,10 @@ def create_visualizations(df):
             showlegend=False,
             updatemenus=[],
             sliders=[],
+            transition={'duration': 0}
         )
-        # Configure animation settings for autoplay and loop
-        fig_heatmap.layout.updatemenus = []
-        fig_heatmap.update_layout(transition={'duration': 0})
-        fig_heatmap.update_frames([frame.update(layout=dict(transition={'duration': 0})) for frame in fig_heatmap.frames])
-        fig_heatmap.layout.autoplay = True
-        fig_heatmap.layout.loop = True
+        for frame in fig_heatmap.frames:
+            frame['layout'] = go.Layout(transition={'duration': 0})
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
         logger.info("Heatmap visualization created.")
 
