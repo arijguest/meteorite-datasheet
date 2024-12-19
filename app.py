@@ -257,6 +257,7 @@ def create_visualizations(df):
         # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
         fig_radial = go.Figure()
+
         for mass_cat in class_mass.columns:
             fig_radial.add_trace(go.Barpolar(
                 r=class_mass[mass_cat],
@@ -266,6 +267,7 @@ def create_visualizations(df):
                 opacity=0.8,
                 hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
             ))
+
         fig_radial.update_layout(
             title=None,
             template="plotly_dark",
@@ -286,6 +288,7 @@ def create_visualizations(df):
                 )
             )
         )
+
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
 
         # Time Distribution Plot
@@ -297,6 +300,7 @@ def create_visualizations(df):
             labels={"year": "Discovery", "count": "Count"},
             opacity=0.8
         )
+
         fig_time.update_layout(
             template="plotly_dark",
             yaxis_type="log",
@@ -308,10 +312,12 @@ def create_visualizations(df):
             margin=dict(l=0, r=0, t=0, b=0),
             xaxis=dict(range=[1700, 2013])
         )
+
         fig_time.update_traces(
             hovertemplate='Discovery: %{x}<br>Class: %{customdata}<br>Count: %{y}<extra></extra>',
             customdata=df['recclass_clean']
         )
+
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
         # Global Map
@@ -336,6 +342,7 @@ def create_visualizations(df):
             },
             color_discrete_map=COLORS
         )
+
         fig_map.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
@@ -346,20 +353,53 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
-            width = 1000,
+            width=1000,
             showlegend=False,
             title=None
         )
+
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
 
-        # Enhanced Heatmap
-        fig_heatmap = go.Figure(data=go.Densitymapbox(
-            lat=df['reclat'],
-            lon=df['reclong'],
+        # Enhanced Heatmap with Animation
+        df_sorted = df.sort_values('year')
+        
+        # Create 5-year bins
+        df_sorted['year_bin'] = (df_sorted['year'] // 5) * 5
+        year_bins = sorted(df_sorted['year_bin'].unique())
+
+        # Initialize figure
+        fig_heatmap = go.Figure()
+
+        # Add initial data
+        initial_df = df_sorted[df_sorted['year_bin'] <= year_bins[0]]
+        fig_heatmap.add_trace(go.Densitymapbox(
+            lat=initial_df['reclat'],
+            lon=initial_df['reclong'],
             radius=10,
-            colorscale='Viridis',
-            showscale=False
+            colorscale='Plasma',
+            showscale=False,
+            visible=True
         ))
+
+        # Create frames for each 5-year bin
+        frames = []
+        for year_bin in year_bins[1:]:
+            cumulative_df = df_sorted[df_sorted['year_bin'] <= year_bin]
+            frame = go.Frame(
+                data=[go.Densitymapbox(
+                    lat=cumulative_df['reclat'],
+                    lon=cumulative_df['reclong'],
+                    radius=10,
+                    colorscale='Plasma',
+                    showscale=False
+                )],
+                name=str(year_bin)
+            )
+            frames.append(frame)
+
+        fig_heatmap.frames = frames
+
+        # Update layout with auto-animation settings
         fig_heatmap.update_layout(
             mapbox=dict(
                 style="carto-darkmatter",
@@ -370,9 +410,45 @@ def create_visualizations(df):
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             height=800,
-            width = 1000,
-            showlegend=False
+            width=1000,
+            showlegend=False,
+            # Auto-animation settings
+            updatemenus=[dict(
+                type="buttons",
+                buttons=[dict(
+                    label="",
+                    method="animate",
+                    args=[None, {
+                        "frame": {"duration": 500, "redraw": True},
+                        "fromcurrent": True,
+                        "transition": {"duration": 0},
+                        "mode": "immediate"
+                    }],
+                    args2=[None, {
+                        "frame": {"duration": 0, "redraw": False},
+                        "mode": "immediate",
+                        "transition": {"duration": 0}
+                    }]
+                )],
+                direction="left",
+                pad={"r": 10, "t": 87},
+                showactive=False,
+                type="buttons",
+                visible=False
+            )],
+            # Animation settings
+            sliders=[],  # Remove slider
+            annotations=[{
+                "text": f"Years: {year_bins[0]}-{year_bins[-1]}",
+                "showarrow": False,
+                "x": 0.5,
+                "y": 1.05,
+                "xref": "paper",
+                "yref": "paper",
+                "font": {"size": 14, "color": "white"}
+            }]
         )
+
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
 
         return radial_html, time_html, map_html, heatmap_html
