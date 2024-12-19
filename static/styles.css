@@ -89,7 +89,7 @@ body {
 
 /* Map Container */
 .map-container { 
-    height: 500px;
+    height: 800px;
     border-radius: var(--border-radius);
     overflow: hidden;
     padding-left: 0 !important;
