@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, g
 import requests
 import pandas as pd
 import plotly.express as px
@@ -61,23 +61,19 @@ METEORITE_DESCRIPTIONS = {
 # Global variable to store the dataset
 df_global = None
 
-# Global cache for visualizations
-visualizations_cache = {}
-
+# Define meteorite categories
 def classify_meteorite(recclass):
-    """
-    Classify meteorites into broader categories based on their recclass.
-    """
     if pd.isna(recclass):
         return 'Unknown'
+    
     recclass = str(recclass).strip()
-    # Ensure 'LL' is checked before 'L' to avoid misclassification
-    if recclass.startswith('LL'):
-        return 'LL-type'
-    elif recclass.startswith('L'):
+    
+    if recclass.startswith('L'):
         return 'L-type'
     elif recclass.startswith('H'):
         return 'H-type'
+    elif recclass.startswith('LL'):
+        return 'LL-type'
     elif recclass.startswith(('CI', 'CM', 'CR', 'CO', 'CV', 'CK')):
         return 'Carbonaceous'
     elif recclass.startswith(('EH', 'EL')):
@@ -98,77 +94,61 @@ def classify_meteorite(recclass):
         return 'Unknown'
     else:
         return 'Other'
-
 def process_data():
-    """
-    Load and process meteorite data from NASA.
-    """
     try:
+        # Fetch data only if df_global is None
         if not os.path.exists('meteorite_data.csv'):
-            # Fetch data from NASA API
             response = requests.get("https://data.nasa.gov/resource/gh4g-9sfh.json?$limit=50000", timeout=10)
             response.raise_for_status()
             df = pd.DataFrame(response.json())
             df.to_csv('meteorite_data.csv', index=False)
-            logger.info("Data fetched from NASA and saved locally.")
         else:
-            # Load data from local CSV
             df = pd.read_csv('meteorite_data.csv', on_bad_lines='skip')
-            logger.info("Data loaded from local CSV.")
 
-        # Convert columns to appropriate data types
+        # Process data
         df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
         df['recclass_clean'] = df['recclass'].apply(classify_meteorite)
 
-        # Remove rows with missing critical data
-        df = df.replace([np.inf, -np.inf], np.nan)
-        df = df.dropna(subset=['mass', 'reclat', 'reclong', 'year'])
+        # Remove rows with NaN values in critical columns
+        df = df.dropna(subset=['mass', 'reclat', 'reclong'])
 
-        # Create mass categories
-        mass_bins = [0, 10, 100, 1000, 10000, 1000000, float('inf')]
+        # Create mass categories with specific boundaries (in grams)
+        mass_bins = [0, 10, 100, 1000, 10000, 1000000, float('inf')]  # 1 million grams = 1 tonne
         mass_labels = ['Microscopic (0-10g)', 'Small (10-100g)', 'Medium (100g-1kg)',
-                       'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
+                    'Large (1-10kg)', 'Very Large (10kg-1t)', 'Massive (>1t)']
         df['mass_category'] = pd.cut(df['mass'], bins=mass_bins, labels=mass_labels, right=True)
 
-        # Format mass and year for display
+        # Add century classification
+        df['century'] = df['year'].apply(lambda x: f"{int(x//100 + 1)}th Century" if pd.notnull(x) else "Unknown")
+
+        # Enhanced data formatting
         df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown")
         df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
 
-        logger.info(f"Processed data with {len(df)} records.")
         return df
-
     except Exception as e:
-        logger.exception(f"Error processing data: {e}")
+        logger.error(f"Error processing data: {e}")
         return pd.DataFrame()
 
+# Load and process data when the app starts
 def load_data():
-    """
-    Load the dataset into the global variable when the app starts.
-    """
     global df_global
     df_global = process_data()
     if df_global.empty:
         logger.error("Failed to load meteorite data during app initialization.")
 
-# Load data at startup
+# Call load_data() when the app starts
 load_data()
 
 @app.route('/data')
 def data():
-    """
-    Endpoint to provide data to DataTables via AJAX.
-    """
     global df_global
-    df = df_global
+    df = df_global  # Use the pre-loaded dataset
 
-    if df.empty:
-        logger.error("Dataframe is empty.")
-        return jsonify({'data': [], 'recordsTotal': 0, 'recordsFiltered': 0}), 500
-
-    # Parameters from DataTables
+    # Parameters sent by DataTables
     draw = int(request.args.get('draw', 1))
     start = int(request.args.get('start', 0))
     length = int(request.args.get('length', 10))
@@ -186,40 +166,27 @@ def data():
     # Pagination
     df_page = df_filtered.iloc[start:start+length]
 
-    # Prepare data for response
-    data_records = df_page[['name', 'recclass', 'recclass_clean', 'mass_formatted',
-                            'year_formatted', 'reclat', 'reclong', 'fall']].to_dict('records')
+    # Select only the columns needed
+    df_page = df_page[['name', 'recclass', 'recclass_clean', 'mass_formatted', 'year_formatted', 'reclat', 'reclong', 'fall']]
+
+    # Prepare data for JSON response
+    data = df_page.to_dict('records')
 
     # Return response in the format DataTables expects
     return jsonify({
         'draw': draw,
         'recordsTotal': records_total,
         'recordsFiltered': records_filtered,
-        'data': data_records
+        'data': data
     })
 
 @app.before_request
 def before_request():
-    """
-    Clean up memory before each request.
-    """
     gc.collect()
 
 def create_visualizations(df):
-    """
-    Create Plotly visualizations: radial plot, time distribution, global map, and heatmap.
-    """
-    global visualizations_cache
-    if visualizations_cache:
-        logger.info("Using cached visualizations.")
-        return (visualizations_cache['radial_html'],
-                visualizations_cache['time_html'],
-                visualizations_cache['map_html'],
-                visualizations_cache['heatmap_html'])
-
-    logger.info("Generating new visualizations.")
     try:
-        # Format mass for display and size for plotting
+        # Process mass to include appropriate units
         def format_mass(x):
             if x >= 1e6:
                 return f"{x / 1e6:.2f} tonnes"
@@ -231,8 +198,7 @@ def create_visualizations(df):
         df['mass_with_units'] = df['mass'].apply(format_mass)
         df['size'] = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
 
-        # Radial Plot
-        logger.info("Creating radial plot.")
+        # Radial plot
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
         fig_radial = go.Figure()
         for mass_cat in class_mass.columns:
@@ -245,233 +211,149 @@ def create_visualizations(df):
                 hovertemplate='Class: %{theta}<br>Mass Category: ' + mass_cat + '<br>Count: %{r}<extra></extra>'
             ))
         fig_radial.update_layout(
+            title=None,
             template="plotly_dark",
             showlegend=False,
             margin=dict(l=0, r=0, t=20, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             polar=dict(
-                radialaxis=dict(type="log", showticklabels=False),
-                angularaxis=dict()
+                radialaxis=dict(
+                    type="log",
+                    gridcolor="#444",
+                    linecolor="#444",
+                    showticklabels=False
+                ),
+                angularaxis=dict(
+                    gridcolor="#444",
+                    linecolor="#444"
+                )
             )
         )
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
-        logger.info("Radial plot created.")
-
-        # Prepare data for animations
-        df_animation = df[(df['year'] >= 1700) & (df['year'] <= 2013)].copy()
-        df_animation['year'] = df_animation['year'].astype(int)
-        df_animation['year_block'] = (df_animation['year'] // 3) * 3
-        year_blocks = sorted(df_animation['year_block'].unique())
-        logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
-
-        # Create frames with decreasing opacities
-        frames = []
-        # Pre-calculate year blocks to avoid repeated calculations
-        year_blocks = sorted(df_animation['year_block'].unique())[-20:]  # Limit to last 20 blocks
-
-        for current_block in year_blocks:
-            # Simplified block inclusion
-            blocks_to_include = [current_block, current_block - 3, current_block - 6]
-            opacities = [0.8, 0.4, 0.2]
-            
-            # Use boolean indexing with .loc for better performance
-            mask = (df_animation['year_block'] >= current_block - 6) & (df_animation['year_block'] <= current_block)
-            df_frame = df_animation.loc[mask].copy()
-            
-            # Vectorized opacity assignment using .loc
-            opacity_map = dict(zip(blocks_to_include, opacities))
-            df_frame.loc[:, 'opacity'] = df_frame['year_block'].map(opacity_map).fillna(0)
-
-            frame = go.Frame(
-                data=[go.Scattermapbox(
-                    lat=df_frame['reclat'],
-                    lon=df_frame['reclong'],
-                    mode='markers',
-                    marker=dict(
-                        size=df_frame['size'],
-                        color=df_frame['recclass_clean'].map(COLORS),
-                        opacity=df_frame['opacity']
-                    ),
-                    customdata=np.stack((
-                        df_frame['name'],
-                        df_frame['recclass'],
-                        df_frame['mass_with_units'],
-                        df_frame['year_formatted'],
-                        df_frame['fall'],
-                        df_frame['reclat'],
-                        df_frame['reclong']
-                    ), axis=-1),
-                    hovertemplate=(
-                        'Name: %{customdata[0]}<br>' +
-                        'Class: %{customdata[1]}<br>' +
-                        'Mass: %{customdata[2]}<br>' +
-                        'Year: %{customdata[3]}<br>' +
-                        'Fall: %{customdata[4]}<br>' +
-                        'Lat: %{customdata[5]}<br>' +
-                        'Long: %{customdata[6]}<extra></extra>'
-                    )
-                )],
-                name=str(current_block)
-            )
-            frames.append(frame)
-
-        # Create the map figure
-        fig_map = go.Figure(data=frames[0].data, frames=frames)
-        fig_map.update_layout(
-            mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-            updatemenus=[{
-                'type': 'buttons',
-                'buttons': [{
-                    'label': 'Play',
-                    'method': 'animate',
-                    'args': [None, {
-                        'frame': {'duration': 500, 'redraw': True},
-                        'fromcurrent': True,
-                        'transition': {'duration': 0}
-                    }]
-                }],
-                'showactive': False,
-                'x': 0.1,
-                'y': 0,
-            }],
-            sliders=[{
-                'active': 0,
-                'currentvalue': {'prefix': 'Year Block: '},
-                'pad': {'t': 50},
-                'steps': [{
-                    'method': 'animate',
-                    'label': str(block),
-                    'args': [[str(block)], {
-                        'frame': {'duration': 0, 'redraw': True},
-                        'mode': 'immediate',
-                        'transition': {'duration': 0}
-                    }]
-                } for block in year_blocks]
-            }]
-        )
-        map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
-        logger.info("Global map visualization created.")
-
-        # Create the heatmap visualization
-        logger.info("Creating cumulative animated heatmap.")
-        frames_heatmap = []
-        for year in years:
-            mask = df_animation['year'] <= year
-            frame = go.Frame(
-                data=[go.Densitymapbox(
-                    lat=df_animation[mask]['reclat'],
-                    lon=df_animation[mask]['reclong'],
-                    radius=10,
-                    colorscale='Viridis',
-                    showscale=False,
-                )],
-                name=str(year)
-            )
-            frames_heatmap.append(frame)
-
-        fig_heatmap = go.Figure(
-            data=[go.Densitymapbox(
-                lat=[],
-                lon=[],
-                radius=10,
-                colorscale='Viridis',
-                showscale=False,
-            )],
-            frames=frames_heatmap
-        )
-        fig_heatmap.update_layout(
-            mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
-            margin=dict(l=0, r=0, t=0, b=0),
-            showlegend=False,
-            updatemenus=[{
-                'type': 'buttons',
-                'buttons': [{
-                    'label': 'Play',
-                    'method': 'animate',
-                    'args': [None, {
-                        'frame': {'duration': 100, 'redraw': True},
-                        'fromcurrent': True,
-                        'transition': {'duration': 0}
-                    }]
-                }],
-                'showactive': False,
-                'x': 0.1,
-                'y': 0,
-            }],
-            sliders=[{
-                'active': 0,
-                'currentvalue': {'prefix': 'Year: '},
-                'pad': {'t': 50},
-                'steps': [{
-                    'method': 'animate',
-                    'label': str(year),
-                    'args': [[str(year)], {
-                        'frame': {'duration': 0, 'redraw': True},
-                        'mode': 'immediate',
-                        'transition': {'duration': 0}
-                    }]
-                } for year in years]
-            }]
-        )
-        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
-        logger.info("Heatmap visualization created.")
 
         # Time Distribution Plot
-        logger.info("Creating time distribution plot.")
         fig_time = px.histogram(
-            df_animation,
+            df,
             x="year",
             color="recclass_clean",
             color_discrete_map=COLORS,
-            labels={"year": "Year", "count": "Count"},
-            opacity=0.8,
-            nbins=len(year_blocks)
+            labels={"year": "Discovery", "count": "Count"},
+            opacity=0.8
         )
         fig_time.update_layout(
             template="plotly_dark",
             yaxis_type="log",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_title="Year",
+            xaxis_title="Discovered",
             yaxis_title="Total",
             showlegend=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[1700, 2013]),
+            xaxis=dict(range=[1700, 2013])
+        )
+        fig_time.update_traces(
+            hovertemplate='Discovery: %{x}<br>Class: %{customdata}<br>Count: %{y}<extra></extra>',
+            customdata=df['recclass_clean']
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
-        logger.info("Time distribution plot created.")
 
-        # Store visualizations in cache
-        visualizations_cache['radial_html'] = radial_html
-        visualizations_cache['time_html'] = time_html
-        visualizations_cache['map_html'] = map_html
-        visualizations_cache['heatmap_html'] = ''
+        # Global Map
+        fig_map = px.scatter_mapbox(
+            df,
+            lat='reclat',
+            lon='reclong',
+            color='recclass',
+            size='size',
+            hover_name='name',
+            hover_data={
+                'Lat': df['reclat'],
+                'Long': df['reclong'],
+                'Class': df['recclass'],
+                'Mass': df['mass_with_units'],
+                'Year': df['year_formatted'],
+                'Fall': df['fall'],
+                'reclat': False,
+                'reclong': False,
+                'recclass': False,
+                'size': False
+            },
+            color_discrete_map=COLORS
+        )
+        fig_map.update_layout(
+            mapbox=dict(
+                style="carto-darkmatter",
+                center=dict(lat=0, lon=0),
+                zoom=0.3
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=800,
+            width = 1000,
+            showlegend=False,
+            title=None
+        )
+        map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
 
-        return radial_html, time_html, map_html, ''
+        # Enhanced Heatmap
+        fig_heatmap = go.Figure(data=go.Densitymapbox(
+            lat=df['reclat'],
+            lon=df['reclong'],
+            radius=10,
+            colorscale='Viridis',
+            showscale=False
+        ))
+        fig_heatmap.update_layout(
+            mapbox=dict(
+                style="carto-darkmatter",
+                center=dict(lat=0, lon=0),
+                zoom=0.3
+            ),
+            margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=800,
+            width = 1000,
+            showlegend=False
+        )
+        heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
+
+        return radial_html, time_html, map_html, heatmap_html
 
     except Exception as e:
-        logger.exception(f"Error creating visualizations: {e}")
+        logger.error(f"Error creating visualizations: {e}")
         return '', '', '', ''
 
 @app.route("/")
 def home():
-    """
-    Render the main dashboard page.
-    """
     try:
         global df_global
         df = df_global
         if df.empty:
-            logger.error("Empty dataframe in home route")
             return "Unable to fetch meteorite data", 503
 
         visualizations = create_visualizations(df)
         radial_html, time_html, map_html, heatmap_html = visualizations
 
-        if not all([radial_html, time_html, map_html, heatmap_html]):
-            logger.error("One or more visualizations failed to generate")
-            return "Error generating visualizations", 500
+        # Enhanced data formatting
+        df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
+        df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
+        
+        # Rename columns for display
+        display_columns = {
+            "name": "Meteorite Name",
+            "recclass": "Classification",
+            "recclass_clean": "Group Class",
+            "mass_formatted": "Mass",
+            "year_formatted": "Discovered",
+            "reclat": "Latitude",
+            "reclong": "Longitude",
+            "fall": "Find/Fall",
+        }
+        
+        df_display = df[list(display_columns.keys())].copy()
+        df_display.columns = list(display_columns.values())
 
         return render_template('layout.html',
                              descriptions=METEORITE_DESCRIPTIONS,
@@ -480,11 +362,10 @@ def home():
                              map_html=map_html,
                              heatmap_html=heatmap_html,
                              last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
     except Exception as e:
-        logger.exception(f"Error in home route: {e}")
+        logger.error(f"Error in home route: {e}")
         return "An error occurred while processing the request", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port)
