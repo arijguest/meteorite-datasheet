@@ -61,6 +61,9 @@ METEORITE_DESCRIPTIONS = {
 # Global variable to store the dataset
 df_global = None
 
+# Global cache for visualizations
+visualizations_cache = {}
+
 def classify_meteorite(recclass):
     """
     Classify meteorites into broader categories based on their recclass.
@@ -121,6 +124,7 @@ def process_data():
         df['recclass_clean'] = df['recclass'].apply(classify_meteorite)
 
         # Remove rows with missing critical data
+        df = df.replace([np.inf, -np.inf], np.nan)
         df = df.dropna(subset=['mass', 'reclat', 'reclong', 'year'])
 
         # Create mass categories
@@ -203,8 +207,17 @@ def before_request():
 
 def create_visualizations(df):
     """
-    Create Plotly visualizations: radial plot, time distribution with animation, animated map, and heatmap.
+    Create Plotly visualizations: radial plot, time distribution, global map, and heatmap.
     """
+    global visualizations_cache
+    if visualizations_cache:
+        logger.info("Using cached visualizations.")
+        return (visualizations_cache['radial_html'],
+                visualizations_cache['time_html'],
+                visualizations_cache['map_html'],
+                visualizations_cache['heatmap_html'])
+
+    logger.info("Generating new visualizations.")
     try:
         # Format mass for display and size for plotting
         def format_mass(x):
@@ -219,6 +232,7 @@ def create_visualizations(df):
         df['size'] = df['mass'].apply(lambda x: np.log10(x + 1) * 2)
 
         # Radial Plot
+        logger.info("Creating radial plot.")
         class_mass = df.groupby(['recclass_clean', 'mass_category']).size().unstack(fill_value=0)
         fig_radial = go.Figure()
         for mass_cat in class_mass.columns:
@@ -240,21 +254,27 @@ def create_visualizations(df):
             )
         )
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
+        logger.info("Radial plot created.")
 
         # Ensure 'year' is integer
         df['year'] = df['year'].astype(int)
 
-        # Limit data for animations to improve performance
-        df_animation = df.copy()
+        # Create a decade column for grouping
+        df['decade'] = (df['year'] // 10) * 10
 
-        # Animated Global Map
+        # Limit data for animations to improve performance
+        df_animation = df[df['year'] >= 1900].copy()
+        logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
+
+        # Animated Global Map using decades
+        logger.info("Creating animated global map.")
         fig_map = px.scatter_mapbox(
             df_animation,
             lat='reclat',
             lon='reclong',
             color='recclass_clean',
             size='size',
-            animation_frame='year',
+            animation_frame='decade',
             animation_group='name',
             hover_name='name',
             hover_data={
@@ -275,13 +295,15 @@ def create_visualizations(df):
             showlegend=False,
         )
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
+        logger.info("Global map visualization created.")
 
-        # Cumulative Animated Heatmap
-        df_sorted = df_animation.sort_values('year')
-        years = df_sorted['year'].unique()
+        # Cumulative Animated Heatmap using decades
+        logger.info("Creating cumulative animated heatmap.")
+        df_sorted = df_animation.sort_values('decade')
+        decades = df_sorted['decade'].unique()
         frames_heatmap = []
-        for year in years:
-            df_cumulative = df_sorted[df_sorted['year'] <= year]
+        for decade in decades:
+            df_cumulative = df_sorted[df_sorted['decade'] <= decade]
             frame = go.Frame(
                 data=[go.Densitymapbox(
                     lat=df_cumulative['reclat'],
@@ -290,7 +312,7 @@ def create_visualizations(df):
                     colorscale='Viridis',
                     showscale=False,
                 )],
-                name=str(year)
+                name=str(decade)
             )
             frames_heatmap.append(frame)
 
@@ -310,7 +332,7 @@ def create_visualizations(df):
             showlegend=False,
             updatemenus=[{
                 'buttons': [{
-                    'args': [None, {'frame': {'duration': 100, 'redraw': True},
+                    'args': [None, {'frame': {'duration': 500, 'redraw': True},
                                     'fromcurrent': True}],
                     'label': 'Play',
                     'method': 'animate'
@@ -322,72 +344,38 @@ def create_visualizations(df):
             }],
         )
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
+        logger.info("Heatmap visualization created.")
 
-        # Time Distribution Plot with Moving Vertical Bar
+        # Time Distribution Plot using decades
+        logger.info("Creating time distribution plot.")
         fig_time = px.histogram(
             df_animation,
-            x="year",
+            x="decade",
             color="recclass_clean",
             color_discrete_map=COLORS,
-            labels={"year": "Discovery", "count": "Count"},
+            labels={"decade": "Decade", "count": "Count"},
             opacity=0.8,
-            nbins=100
+            nbins=20
         )
         fig_time.update_layout(
             template="plotly_dark",
             yaxis_type="log",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_title="Discovered",
+            xaxis_title="Decade",
             yaxis_title="Total",
             showlegend=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[df_animation['year'].min(), df_animation['year'].max()]),
+            xaxis=dict(range=[df_animation['decade'].min(), df_animation['decade'].max()]),
         )
+                time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
+        logger.info("Time distribution plot created.")
 
-        # Create frames for the time histogram
-        frames_time = []
-        max_count = df_animation['year'].value_counts().max()
-
-        for year in sorted(df_animation['year'].unique()):
-            frame = go.Frame(
-                data=[go.Histogram(
-                    x=df_animation[df_animation['year'] <= year]['year'],
-                    nbinsx=100,
-                    marker_color=df_animation['recclass_clean'].map(COLORS),
-                    opacity=0.8,
-                )],
-                layout=go.Layout(
-                    shapes=[dict(
-                        type='line',
-                        x0=year,
-                        y0=0,
-                        x1=year,
-                        y1=max_count,
-                        line=dict(color='red', width=2, dash='dot'),
-                        xref='x',
-                        yref='y'
-                    )]
-                ),
-                name=str(year)
-            )
-            frames_time.append(frame)
-
-        fig_time.frames = frames_time
-        fig_time.update_layout(
-            updatemenus=[{
-                'buttons': [{
-                    'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True}],
-                    'label': 'Play',
-                    'method': 'animate'
-                }],
-                'type': 'buttons',
-                'showactive': False,
-                'x': 0.05,
-                'y': 0.95
-            }]
-        )
-        time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
+        # Store visualizations in cache
+        visualizations_cache['radial_html'] = radial_html
+        visualizations_cache['time_html'] = time_html
+        visualizations_cache['map_html'] = map_html
+        visualizations_cache['heatmap_html'] = heatmap_html
 
         return radial_html, time_html, map_html, heatmap_html
 
@@ -428,5 +416,4 @@ def home():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
-
+    app.run(host="0.0.0.0", port=port, debug=False)
