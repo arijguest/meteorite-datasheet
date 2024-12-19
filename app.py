@@ -113,7 +113,7 @@ def process_data():
             df = pd.read_csv(data_file, on_bad_lines='skip')
 
         # Process data
-        df['mass'] = pd.to_numeric(df['mass (g)'], errors='coerce')
+        df['mass'] = pd.to_numeric(df['mass'], errors='coerce')
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
         df['reclat'] = pd.to_numeric(df['reclat'], errors='coerce')
         df['reclong'] = pd.to_numeric(df['reclong'], errors='coerce')
