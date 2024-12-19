@@ -68,6 +68,7 @@ def classify_meteorite(recclass):
     if pd.isna(recclass):
         return 'Unknown'
     recclass = str(recclass).strip()
+    # Ensure 'LL' is checked before 'L' to avoid misclassification
     if recclass.startswith('LL'):
         return 'LL-type'
     elif recclass.startswith('L'):
@@ -132,10 +133,11 @@ def process_data():
         df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f} g" if pd.notnull(x) else "Unknown")
         df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
 
+        logger.info(f"Processed data with {len(df)} records.")
         return df
 
     except Exception as e:
-        logger.error(f"Error processing data: {e}")
+        logger.exception(f"Error processing data: {e}")
         return pd.DataFrame()
 
 def load_data():
@@ -157,6 +159,10 @@ def data():
     """
     global df_global
     df = df_global
+
+    if df.empty:
+        logger.error("Dataframe is empty.")
+        return jsonify({'data': [], 'recordsTotal': 0, 'recordsFiltered': 0}), 500
 
     # Parameters from DataTables
     draw = int(request.args.get('draw', 1))
@@ -238,9 +244,12 @@ def create_visualizations(df):
         # Ensure 'year' is integer
         df['year'] = df['year'].astype(int)
 
+        # Limit data for animations to improve performance
+        df_animation = df.copy()
+
         # Animated Global Map
         fig_map = px.scatter_mapbox(
-            df,
+            df_animation,
             lat='reclat',
             lon='reclong',
             color='recclass_clean',
@@ -249,12 +258,12 @@ def create_visualizations(df):
             animation_group='name',
             hover_name='name',
             hover_data={
-                'Lat': df['reclat'],
-                'Long': df['reclong'],
-                'Class': df['recclass'],
-                'Mass': df['mass_with_units'],
-                'Year': df['year_formatted'],
-                'Fall': df['fall'],
+                'Lat': df_animation['reclat'],
+                'Long': df_animation['reclong'],
+                'Class': df_animation['recclass'],
+                'Mass': df_animation['mass_with_units'],
+                'Year': df_animation['year_formatted'],
+                'Fall': df_animation['fall'],
             },
             color_discrete_map=COLORS,
             opacity=0.8,
@@ -264,46 +273,35 @@ def create_visualizations(df):
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
-            updatemenus=[{
-                'buttons': [{
-                    'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}],
-                    'label': 'Play',
-                    'method': 'animate'
-                }],
-                'type': 'buttons',
-                'showactive': False,
-                'x': 0.05,
-                'y': 0.05
-            }],
         )
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
 
         # Cumulative Animated Heatmap
-        df_sorted = df.sort_values('year')
+        df_sorted = df_animation.sort_values('year')
         years = df_sorted['year'].unique()
         frames_heatmap = []
         for year in years:
             df_cumulative = df_sorted[df_sorted['year'] <= year]
             frame = go.Frame(
-                data=go.Densitymapbox(
+                data=[go.Densitymapbox(
                     lat=df_cumulative['reclat'],
                     lon=df_cumulative['reclong'],
                     radius=10,
                     colorscale='Viridis',
                     showscale=False,
-                ),
+                )],
                 name=str(year)
             )
             frames_heatmap.append(frame)
 
         fig_heatmap = go.Figure(
-            data=go.Densitymapbox(
+            data=[go.Densitymapbox(
                 lat=[],
                 lon=[],
                 radius=10,
                 colorscale='Viridis',
                 showscale=False,
-            ),
+            )],
             frames=frames_heatmap
         )
         fig_heatmap.update_layout(
@@ -312,7 +310,8 @@ def create_visualizations(df):
             showlegend=False,
             updatemenus=[{
                 'buttons': [{
-                    'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}],
+                    'args': [None, {'frame': {'duration': 100, 'redraw': True},
+                                    'fromcurrent': True}],
                     'label': 'Play',
                     'method': 'animate'
                 }],
@@ -326,7 +325,7 @@ def create_visualizations(df):
 
         # Time Distribution Plot with Moving Vertical Bar
         fig_time = px.histogram(
-            df,
+            df_animation,
             x="year",
             color="recclass_clean",
             color_discrete_map=COLORS,
@@ -343,31 +342,20 @@ def create_visualizations(df):
             yaxis_title="Total",
             showlegend=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[df['year'].min(), df['year'].max()]),
-        )
-
-        # Add vertical line for current year
-        fig_time.add_shape(
-            type='line',
-            x0=df['year'].min(),
-            y0=0,
-            x1=df['year'].min(),
-            y1=df['year'].value_counts().max(),
-            line=dict(color='red', width=2, dash='dot'),
-            xref='x',
-            yref='y',
-            name='Current Year',
+            xaxis=dict(range=[df_animation['year'].min(), df_animation['year'].max()]),
         )
 
         # Create frames for the time histogram
         frames_time = []
-        for year in sorted(df['year'].unique()):
-            # Update vertical line position
+        max_count = df_animation['year'].value_counts().max()
+
+        for year in sorted(df_animation['year'].unique()):
             frame = go.Frame(
-                data=[go.Bar(
-                    x=fig_time.data[0].x,
-                    y=fig_time.data[0].y,
-                    marker_color=fig_time.data[0].marker.color
+                data=[go.Histogram(
+                    x=df_animation[df_animation['year'] <= year]['year'],
+                    nbinsx=100,
+                    marker_color=df_animation['recclass_clean'].map(COLORS),
+                    opacity=0.8,
                 )],
                 layout=go.Layout(
                     shapes=[dict(
@@ -375,7 +363,7 @@ def create_visualizations(df):
                         x0=year,
                         y0=0,
                         x1=year,
-                        y1=df['year'].value_counts().max(),
+                        y1=max_count,
                         line=dict(color='red', width=2, dash='dot'),
                         xref='x',
                         yref='y'
@@ -389,7 +377,7 @@ def create_visualizations(df):
         fig_time.update_layout(
             updatemenus=[{
                 'buttons': [{
-                    'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True, 'transition': {'duration': 0}}],
+                    'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True}],
                     'label': 'Play',
                     'method': 'animate'
                 }],
@@ -404,7 +392,7 @@ def create_visualizations(df):
         return radial_html, time_html, map_html, heatmap_html
 
     except Exception as e:
-        logger.error(f"Error creating visualizations: {e}")
+        logger.exception(f"Error creating visualizations: {e}")
         return '', '', '', ''
 
 @app.route("/")
@@ -416,29 +404,15 @@ def home():
         global df_global
         df = df_global
         if df.empty:
+            logger.error("Empty dataframe in home route")
             return "Unable to fetch meteorite data", 503
 
         visualizations = create_visualizations(df)
         radial_html, time_html, map_html, heatmap_html = visualizations
 
-        # Enhanced data formatting
-        df['mass_formatted'] = df['mass'].apply(lambda x: f"{x:,.2f}g" if pd.notnull(x) else "Unknown")
-        df['year_formatted'] = df['year'].apply(lambda x: f"{int(x)}" if pd.notnull(x) else "Unknown")
-        
-        # Rename columns for display
-        display_columns = {
-            "name": "Meteorite Name",
-            "recclass": "Classification", 
-            "recclass_clean": "Group Class",
-            "mass_formatted": "Mass",
-            "year_formatted": "Discovered",
-            "reclat": "Latitude",
-            "reclong": "Longitude",
-            "fall": "Find/Fall",
-        }
-        
-        df_display = df[list(display_columns.keys())].copy()
-        df_display.columns = list(display_columns.values())
+        if not all([radial_html, time_html, map_html, heatmap_html]):
+            logger.error("One or more visualizations failed to generate")
+            return "Error generating visualizations", 500
 
         return render_template('layout.html',
                              descriptions=METEORITE_DESCRIPTIONS,
@@ -449,9 +423,10 @@ def home():
                              last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     except Exception as e:
-        logger.error(f"Error in home route: {e}")
+        logger.exception(f"Error in home route: {e}")
         return "An error occurred while processing the request", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
+
