@@ -113,7 +113,7 @@ def process_data():
         data_file = 'meteorite_data.csv'
 
         # Fetch the count from the NASA API
-        count_url = "https://data.nasa.gov/resource/y77d-th95.json?$select=count(*)"
+        count_url = "https://data.nasa.gov/resource/gh4g-9sfh.json?$select=count(*)"
         response = requests.get(count_url)
         response.raise_for_status()
         count_data = response.json()
