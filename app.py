@@ -41,21 +41,33 @@ COLORS = {
     'Other': '#FFFFFF'
 }
 
-# Enhanced descriptions with more detail
+# Meteorite descriptions
 METEORITE_DESCRIPTIONS = {
-    'L-type': 'Low iron ordinary chondrites (L) contain 20-25% total iron, 19-22% iron metal, and olivine (Fa23-25). These are among the most common meteorites found on Earth.',
-    'H-type': 'High iron ordinary chondrites (H) contain 25-31% total iron, 15-19% iron metal, and olivine (Fa16-20). They represent some of the oldest material in our solar system.',
-    'LL-type': 'Low iron, low metal ordinary chondrites (LL) contain 19-22% total iron, 2% iron metal, and olivine (Fa26-32). These rare specimens provide insights into early solar system formation.',
-    'Carbonaceous': 'Primitive meteorites containing organic compounds, water-bearing minerals and stony materials. They are crucial for understanding the origin of life in our solar system.',
-    'Enstatite': 'Rare meteorites formed in very reducing conditions, containing high amounts of enstatite. They provide unique insights into solar system chemistry.',
-    'Achondrite': 'Igneous rocks formed by melting in their parent bodies, lacking chondrules. These meteorites represent processed material from differentiated bodies.',
-    'Iron': 'Composed mainly of iron-nickel metal with minor amounts of sulfides and carbides. They represent core material from destroyed planetesimals.',
-    'Mesosiderite': 'Stony-iron meteorites consisting of approximately equal amounts of metal and silicate. They provide evidence of major collisions between asteroids.',
-    'Martian': 'Meteorites originating from Mars, showing characteristic Martian atmospheric gases. These rare specimens are our only physical samples from Mars.',
-    'Lunar': 'Meteorites originating from the Moon, matching Apollo mission samples. They help us understand lunar geology and history.',
-    'Pallasite': 'Stony-iron meteorites consisting of olivine crystals embedded in iron-nickel metal. They are among the most beautiful meteorites known.',
-    'Unknown': 'Meteorites with uncertain or unclassified composition. Further research is needed to determine their origin.',
-    'Other': 'Other meteorite types not classified in the main categories. These unique specimens often lead to new discoveries.'
+'L-type': 'Low iron ordinary chondrites (L) contain approximately 20-25% total iron and 19-22% iron metal, with olivine compositions ranging from Fa23 to Fa25. These meteorites are among the most prevalent types found on Earth and are significant for understanding the early solar system (Gałązka-Friedman et al., 2019).',
+
+'H-type': 'High iron ordinary chondrites (H) have total iron content between 25-31% and iron metal ranging from 15-19%, with olivine compositions from Fa16 to Fa20. They are believed to represent some of the oldest materials in our solar system, providing insights into the conditions of early planetary formation (Woźniak et al., 2019; Gałązka-Friedman et al., 2019).',
+
+'LL-type': 'Low iron, low metal ordinary chondrites (LL) contain 19-22% total iron and about 2% iron metal, with olivine compositions from Fa26 to Fa32. These meteorites are rare and offer critical insights into the formation processes of the solar system (Woźniak et al., 2019; Gałązka-Friedman et al., 2019).',
+
+'Carbonaceous': 'Carbonaceous chondrites are primitive meteorites rich in organic compounds and water-bearing minerals, crucial for understanding the origins of life in our solar system. Their complex chemistry provides a window into the early solar system conditions (Jacquet, 2022).',
+
+'Enstatite': 'Enstatite chondrites are rare meteorites formed under highly reducing conditions, characterized by high enstatite content. They are essential for studying the chemical evolution of the solar system and the formation of terrestrial planets (Paliwal et al., 2000; Gałązka-Friedman et al., 2017).',
+
+'Achondrite': 'Achondrites are igneous rocks formed by melting in their parent bodies, lacking chondrules. They represent processed materials from differentiated bodies, providing insights into planetary differentiation processes (Zurfluh et al., 2011).',
+
+'Iron': 'Iron meteorites are primarily composed of iron-nickel metal, with minor sulfides and carbides. They are believed to represent core materials from differentiated planetesimals, offering clues about the early solar system’s thermal history (Zurfluh et al., 2011).',
+
+'Mesosiderite': 'Mesosiderites are stony-iron meteorites consisting of approximately equal parts metal and silicate. They provide evidence of significant collisions between asteroids, revealing the dynamic processes in the asteroid belt (Soares et al., 2021).',
+
+'Martian': 'Martian meteorites originate from Mars and exhibit characteristic Martian atmospheric gases. These specimens are invaluable as they represent the only physical samples we have from Mars, aiding in our understanding of the planet’s geology and history (Zurfluh et al., 2011).',
+
+'Lunar': 'Lunar meteorites are sourced from the Moon and have compositions that match samples returned by the Apollo missions. They are critical for advancing our knowledge of lunar geology and the Moon’s formation (Zurfluh et al., 2011).',
+
+'Pallasite': 'Pallasites are stony-iron meteorites characterized by olivine crystals embedded in iron-nickel metal. They are among the most aesthetically appealing meteorites and provide insights into the differentiation of planetesimals (Jacquet, 2022).',
+
+'Unknown': 'Meteorites classified as unknown have uncertain or unclassified compositions. Further research is necessary to determine their origins and classifications, highlighting the complexities of meteorite taxonomy (Jacquet, 2022).',
+
+'Other': 'Other meteorite types not classified in the main categories often lead to new discoveries and insights into the diversity of materials in the solar system. These unique specimens can provide critical data for understanding the formation and evolution of planetary bodies (Jacquet, 2022).'
 }
 
 # Global variable to store the dataset
