@@ -256,37 +256,70 @@ def create_visualizations(df):
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
         logger.info("Radial plot created.")
 
-        # Limit data for animations to improve performance
-        df_animation = df[df['year'] >= 1900].copy()
+        # Limit data for animations to the specified years
+        df_animation = df[(df['year'] >= 1700) & (df['year'] <= 2013)].copy()
         df_animation['year'] = df_animation['year'].astype(int)
         logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
 
-        # Animated Global Map using years
-        logger.info("Creating animated global map.")
-        fig_map = px.scatter_mapbox(
-            df_animation,
-            lat='reclat',
-            lon='reclong',
-            color='recclass_clean',
-            size='size',
-            animation_frame='year',
-            animation_group='name',
-            hover_name='name',
-            hover_data={
-                'Lat': df_animation['reclat'],
-                'Long': df_animation['reclong'],
-                'Class': df_animation['recclass'],
-                'Mass': df_animation['mass_with_units'],
-                'Year': df_animation['year_formatted'],
-                'Fall': df_animation['fall'],
-                'reclat': False,
-                'reclong': False,
-                'size': False
-            },
-            color_discrete_map=COLORS,
-            opacity=0.8,
-            height=800,
+        # Create cumulative data for each year for the animated global map
+        logger.info("Creating cumulative animated global map.")
+        df_animation = df_animation.sort_values('year')
+        years = df_animation['year'].unique()
+        frames_map = []
+        for year in years:
+            df_cumulative = df_animation[df_animation['year'] <= year]
+            frame = go.Frame(
+                data=[go.Scattermapbox(
+                    lat=df_cumulative['reclat'],
+                    lon=df_cumulative['reclong'],
+                    mode='markers',
+                    marker=go.scattermapbox.Marker(
+                        size=df_cumulative['size'],
+                        color=df_cumulative['recclass_clean'].map(COLORS),
+                        opacity=0.8
+                    ),
+                    hovertext=df_cumulative['name'],
+                    hoverinfo='text',
+                    customdata=np.stack((
+                        df_cumulative['name'],
+                        df_cumulative['recclass'],
+                        df_cumulative['mass_with_units'],
+                        df_cumulative['year_formatted'],
+                        df_cumulative['fall'],
+                        df_cumulative['reclat'],
+                        df_cumulative['reclong']
+                    ), axis=-1),
+                    hovertemplate=(
+                        'Name: %{customdata[0]}<br>' +
+                        'Class: %{customdata[1]}<br>' +
+                        'Mass: %{customdata[2]}<br>' +
+                        'Year: %{customdata[3]}<br>' +
+                        'Fall: %{customdata[4]}<br>' +
+                        'Lat: %{customdata[5]}<br>' +
+                        'Long: %{customdata[6]}<extra></extra>'
+                    )
+                )],
+                name=str(year)
+            )
+            frames_map.append(frame)
+
+        # Create initial empty figure
+        fig_map = go.Figure(
+            data=[go.Scattermapbox(
+                lat=[],
+                lon=[],
+                mode='markers',
+                marker=go.scattermapbox.Marker(
+                    size=[],
+                    color=[],
+                    opacity=0.8
+                ),
+                hoverinfo='text'
+            )],
+            frames=frames_map
         )
+
+        # Configure layout
         fig_map.update_layout(
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
@@ -297,12 +330,13 @@ def create_visualizations(df):
         )
         for frame in fig_map.frames:
             frame['layout'] = go.Layout(transition={'duration': 0})
+
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
 
         # Cumulative Animated Heatmap using years
         logger.info("Creating cumulative animated heatmap.")
-        df_sorted = df_animation.sort_values('year')
+        df_sorted = df_animation
         years = df_sorted['year'].unique()
         frames_heatmap = []
         for year in years:
@@ -351,7 +385,7 @@ def create_visualizations(df):
             color_discrete_map=COLORS,
             labels={"year": "Year", "count": "Count"},
             opacity=0.8,
-            nbins=50
+            nbins=(2013 - 1700 + 1)
         )
         fig_time.update_layout(
             template="plotly_dark",
@@ -362,7 +396,7 @@ def create_visualizations(df):
             yaxis_title="Total",
             showlegend=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[df_animation['year'].min(), df_animation['year'].max()]),
+            xaxis=dict(range=[1700, 2013]),
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
         logger.info("Time distribution plot created.")
