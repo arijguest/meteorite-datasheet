@@ -256,17 +256,12 @@ def create_visualizations(df):
         radial_html = fig_radial.to_html(full_html=False, include_plotlyjs='cdn', div_id='radial')
         logger.info("Radial plot created.")
 
-        # Ensure 'year' is integer
-        df['year'] = df['year'].astype(int)
-
-        # Create a decade column for grouping
-        df['decade'] = (df['year'] // 10) * 10
-
         # Limit data for animations to improve performance
         df_animation = df[df['year'] >= 1900].copy()
+        df_animation['year'] = df_animation['year'].astype(int)
         logger.debug(f"Dataset for animations contains {len(df_animation)} records.")
 
-        # Animated Global Map using decades
+        # Animated Global Map using years
         logger.info("Creating animated global map.")
         fig_map = px.scatter_mapbox(
             df_animation,
@@ -274,7 +269,7 @@ def create_visualizations(df):
             lon='reclong',
             color='recclass_clean',
             size='size',
-            animation_frame='decade',
+            animation_frame='year',
             animation_group='name',
             hover_name='name',
             hover_data={
@@ -284,6 +279,9 @@ def create_visualizations(df):
                 'Mass': df_animation['mass_with_units'],
                 'Year': df_animation['year_formatted'],
                 'Fall': df_animation['fall'],
+                'reclat': False,
+                'reclong': False,
+                'size': False
             },
             color_discrete_map=COLORS,
             opacity=0.8,
@@ -293,17 +291,25 @@ def create_visualizations(df):
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
+            updatemenus=[],
+            sliders=[],
         )
+        # Configure animation settings for autoplay and loop
+        fig_map.layout.updatemenus = []
+        fig_map.update_layout(transition={'duration': 0})
+        fig_map.update_frames([frame.update(layout=dict(transition={'duration': 0})) for frame in fig_map.frames])
+        fig_map.layout.autoplay = True
+        fig_map.layout.loop = True
         map_html = fig_map.to_html(full_html=False, include_plotlyjs='cdn', div_id='map')
         logger.info("Global map visualization created.")
 
-        # Cumulative Animated Heatmap using decades
+        # Cumulative Animated Heatmap using years
         logger.info("Creating cumulative animated heatmap.")
-        df_sorted = df_animation.sort_values('decade')
-        decades = df_sorted['decade'].unique()
+        df_sorted = df_animation.sort_values('year')
+        years = df_sorted['year'].unique()
         frames_heatmap = []
-        for decade in decades:
-            df_cumulative = df_sorted[df_sorted['decade'] <= decade]
+        for year in years:
+            df_cumulative = df_sorted[df_sorted['year'] <= year]
             frame = go.Frame(
                 data=[go.Densitymapbox(
                     lat=df_cumulative['reclat'],
@@ -312,7 +318,7 @@ def create_visualizations(df):
                     colorscale='Viridis',
                     showscale=False,
                 )],
-                name=str(decade)
+                name=str(year)
             )
             frames_heatmap.append(frame)
 
@@ -330,43 +336,39 @@ def create_visualizations(df):
             mapbox=dict(style="carto-darkmatter", center=dict(lat=0, lon=0), zoom=0.3),
             margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
-            updatemenus=[{
-                'buttons': [{
-                    'args': [None, {'frame': {'duration': 500, 'redraw': True},
-                                    'fromcurrent': True}],
-                    'label': 'Play',
-                    'method': 'animate'
-                }],
-                'type': 'buttons',
-                'showactive': False,
-                'x': 0.05,
-                'y': 0.05
-            }],
+            updatemenus=[],
+            sliders=[],
         )
+        # Configure animation settings for autoplay and loop
+        fig_heatmap.layout.updatemenus = []
+        fig_heatmap.update_layout(transition={'duration': 0})
+        fig_heatmap.update_frames([frame.update(layout=dict(transition={'duration': 0})) for frame in fig_heatmap.frames])
+        fig_heatmap.layout.autoplay = True
+        fig_heatmap.layout.loop = True
         heatmap_html = fig_heatmap.to_html(full_html=False, include_plotlyjs='cdn', div_id='heatmap')
         logger.info("Heatmap visualization created.")
 
-        # Time Distribution Plot using decades
+        # Time Distribution Plot using years
         logger.info("Creating time distribution plot.")
         fig_time = px.histogram(
             df_animation,
-            x="decade",
+            x="year",
             color="recclass_clean",
             color_discrete_map=COLORS,
-            labels={"decade": "Decade", "count": "Count"},
+            labels={"year": "Year", "count": "Count"},
             opacity=0.8,
-            nbins=20
+            nbins=50
         )
         fig_time.update_layout(
             template="plotly_dark",
             yaxis_type="log",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            xaxis_title="Decade",
+            xaxis_title="Year",
             yaxis_title="Total",
             showlegend=False,
             margin=dict(l=0, r=0, t=0, b=0),
-            xaxis=dict(range=[df_animation['decade'].min(), df_animation['decade'].max()]),
+            xaxis=dict(range=[df_animation['year'].min(), df_animation['year'].max()]),
         )
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
         logger.info("Time distribution plot created.")
