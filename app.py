@@ -479,33 +479,45 @@ def home():
         logger.error(f"Error in home route: {e}")
         return "An error occurred while processing the request", 500
 
+def fetch_antarctic_meteorite_data():
+    try:
+        api_url = "https://astromaterials.jsc.nasa.gov/rest/antmetapi/samples"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        df = pd.DataFrame(data)
+        df.to_csv('antarctic_meteorites.csv', index=False)
+    except Exception as e:
+        logger.error(f"Error fetching Antarctic meteorite data: {e}")
+        raise
+
+def check_and_update_antarctic_data():
+    try:
+        data_file = 'antarctic_meteorites.csv'
+        if not os.path.exists(data_file):
+            fetch_antarctic_meteorite_data()
+        else:
+            df = pd.read_csv(data_file)
+            last_updated = datetime.fromtimestamp(os.path.getmtime(data_file))
+            if (datetime.now() - last_updated).days > 1:
+                fetch_antarctic_meteorite_data()
+    except Exception as e:
+        logger.error(f"Error checking/updating Antarctic data: {e}")
+        raise
+
 @app.route('/antarctic')
 def antarctic():
     try:
-        # Step 1: Fetch data from NASA's Antarctic Meteorite API
-        api_url = "https://astromaterials.jsc.nasa.gov/antmet/api/index.cfm"
-        response = requests.get(api_url)
-        
-        # Handle empty or invalid response
-        if response.status_code != 200 or not response.content:
-            raise ValueError("Invalid response from API")
-        
-        data = response.json()
+        check_and_update_antarctic_data()
+        df = pd.read_csv('antarctic_meteorites.csv')
 
-        # Step 2: Convert data to a DataFrame
-        df = pd.DataFrame(data['data'])
-
-        # Step 3: Preprocess data if necessary
         df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
 
-        # Step 4: Define color mapping (as an example)
         COLORS = {
             "Iron, ungrouped": "red",
             "L-chondrite": "blue",
-            # Add more classes and colors as needed
         }
 
-        # Step 5: Create the Plotly histogram
         fig_time = px.histogram(
             df,
             x="year",
@@ -515,7 +527,6 @@ def antarctic():
             opacity=0.8
         )
 
-        # Step 6: Update layout with specified axis limits and styles
         fig_time.update_layout(
             template="plotly_dark",
             yaxis_type="log",
@@ -524,14 +535,12 @@ def antarctic():
             xaxis_title="Discovered",
             yaxis_title="No. of Meteorites",
             xaxis=dict(
-                range=[1700, datetime.now().year]  # Set x-axis range from 1700 to the current year
+                range=[1700, datetime.now().year]
             )
         )
 
-        # Step 7: Display the figure
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
-        # Create additional visualizations
         radial_html, map_html, heatmap_html = create_visualizations(df)[0], create_visualizations(df)[2], create_visualizations(df)[3]
 
         return render_template('antarctic.html', time_html=time_html, radial_html=radial_html, map_html=map_html, heatmap_html=heatmap_html)
