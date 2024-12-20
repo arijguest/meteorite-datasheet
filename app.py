@@ -148,7 +148,7 @@ def process_data():
 
         # Check if required columns are present
         missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
+        if (missing_columns):
             error_msg = f"Missing columns in data: {missing_columns}"
             logger.error(error_msg)
             raise KeyError(error_msg)
@@ -477,6 +477,75 @@ def home():
                              last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     except Exception as e:
         logger.error(f"Error in home route: {e}")
+        return "An error occurred while processing the request", 500
+
+def fetch_antarctic_meteorite_data():
+    try:
+        api_url = "https://astromaterials.jsc.nasa.gov/rest/antmetapi/samples"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        df = pd.DataFrame(data)
+        df.to_csv('antarctic_meteorites.csv', index=False)
+    except Exception as e:
+        logger.error(f"Error fetching Antarctic meteorite data: {e}")
+        raise
+
+def check_and_update_antarctic_data():
+    try:
+        data_file = 'antarctic_meteorites.csv'
+        if not os.path.exists(data_file):
+            fetch_antarctic_meteorite_data()
+        else:
+            df = pd.read_csv(data_file)
+            last_updated = datetime.fromtimestamp(os.path.getmtime(data_file))
+            if (datetime.now() - last_updated).days > 1:
+                fetch_antarctic_meteorite_data()
+    except Exception as e:
+        logger.error(f"Error checking/updating Antarctic data: {e}")
+        raise
+
+@app.route('/antarctic')
+def antarctic():
+    try:
+        check_and_update_antarctic_data()
+        df = pd.read_csv('antarctic_meteorites.csv')
+
+        df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
+
+        COLORS = {
+            "Iron, ungrouped": "red",
+            "L-chondrite": "blue",
+        }
+
+        fig_time = px.histogram(
+            df,
+            x="year",
+            color="recclass",
+            color_discrete_map=COLORS,
+            labels={"year": "Discovery", "count": "No. of Meteorites"},
+            opacity=0.8
+        )
+
+        fig_time.update_layout(
+            template="plotly_dark",
+            yaxis_type="log",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title="Discovered",
+            yaxis_title="No. of Meteorites",
+            xaxis=dict(
+                range=[1700, datetime.now().year]
+            )
+        )
+
+        time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
+
+        radial_html, map_html, heatmap_html = create_visualizations(df)[0], create_visualizations(df)[2], create_visualizations(df)[3]
+
+        return render_template('antarctic.html', time_html=time_html, radial_html=radial_html, map_html=map_html, heatmap_html=heatmap_html)
+    except Exception as e:
+        logger.error(f"Error in antarctic route: {e}")
         return "An error occurred while processing the request", 500
 
 if __name__ == "__main__":
