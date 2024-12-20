@@ -6,7 +6,7 @@
     <meta name="description" content="Explore comprehensive meteorite data analysis with interactive visualizations and detailed classifications">
     <meta name="keywords" content="Meteorite Explorer, NASA Database, Space Analysis, Meteorite Classification, Interactive Data Visualization">
     <meta name="author" content="Meteorite Explorer Team">
-    <title>Meteorite Explorer | Global Analysis Dashboard</title>
+    <title>Meteorite Explorer | Antarctic Meteorite Data</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.13.5/css/buttons.bootstrap5.min.css">
     
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='antarctic_styles.css') }}">
 </head>
 
 <body>
@@ -32,15 +32,15 @@
     <div class="container-fluid">
         <!-- Dashboard Header -->
         <header class="dashboard-title text-center">
-            <h1><i class="fas fa-meteor" aria-hidden="true"></i> Global Meteorite Explorer</h1>
-            <p class="lead">Unveiling Earth's Extraterrestrial Encounters Through Data</p>
+            <h1><i class="fas fa-meteor" aria-hidden="true"></i> Antarctic Meteorite Explorer</h1>
+            <p class="lead">Unveiling Antarctica's Extraterrestrial Encounters Through Data</p>
             
             <div class="dashboard-stats">
                 <div class="row mt-4">
                     <div class="col-md-3 col-sm-6">
                         <div class="stat-card">
                             <i class="fas fa-globe" aria-hidden="true"></i>
-                            <span class="stat-value">Global Coverage</span>
+                            <span class="stat-value">Antarctic Coverage</span>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6">
@@ -93,15 +93,15 @@
         <section class="row gx-0">
             <div class="col-lg-6 col-md-12">
                 <article class="chart-container map-container">
-                    <h2 class="section-title"><i class="fas fa-map-marked-alt" aria-hidden="true"></i> Global Impact Distribution</h2>
+                    <h2 class="section-title"><i class="fas fa-map-marked-alt" aria-hidden="true"></i> Antarctic Impact Distribution</h2>
                     <p class="chart-description">Interactive map showing meteorite landing sites with detailed information</p>
                     {{map_html|safe}}
                 </article>
             </div>
             <div class="col-lg-6 col-md-12">
                 <article class="chart-container map-container">
-                    <h2 class="section-title"><i class="fas fa-temperature-high" aria-hidden="true"></i> Global Concentration Heatmap</h2>
-                    <p class="chart-description">Density visualization of meteorite discoveries worldwide</p>
+                    <h2 class="section-title"><i class="fas fa-temperature-high" aria-hidden="true"></i> Antarctic Concentration Heatmap</h2>
+                    <p class="chart-description">Density visualization of meteorite discoveries in Antarctica</p>
                     {{heatmap_html|safe}}
                 </article>
             </div>
@@ -179,6 +179,6 @@
     <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.1.36/build/vfs_fonts.js" defer></script>
     
     <!-- Custom Scripts -->
-    <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='antarctic_scripts.js') }}" defer></script>
 </body>
 </html>
