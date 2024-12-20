@@ -479,6 +479,58 @@ def home():
         logger.error(f"Error in home route: {e}")
         return "An error occurred while processing the request", 500
 
+@app.route('/antarctic')
+def antarctic():
+    try:
+        # Step 1: Fetch data from NASA's Antarctic Meteorite API
+        api_url = "https://astromaterials.jsc.nasa.gov/antmet/api/index.cfm"
+        response = requests.get(api_url)
+        data = response.json()
+
+        # Step 2: Convert data to a DataFrame
+        df = pd.DataFrame(data['data'])
+
+        # Step 3: Preprocess data if necessary
+        df['year'] = pd.to_datetime(df['year'], errors='coerce').dt.year
+
+        # Step 4: Define color mapping (as an example)
+        COLORS = {
+            "Iron, ungrouped": "red",
+            "L-chondrite": "blue",
+            # Add more classes and colors as needed
+        }
+
+        # Step 5: Create the Plotly histogram
+        fig_time = px.histogram(
+            df,
+            x="year",
+            color="recclass",
+            color_discrete_map=COLORS,
+            labels={"year": "Discovery", "count": "No. of Meteorites"},
+            opacity=0.8
+        )
+
+        # Step 6: Update layout with specified axis limits and styles
+        fig_time.update_layout(
+            template="plotly_dark",
+            yaxis_type="log",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis_title="Discovered",
+            yaxis_title="No. of Meteorites",
+            xaxis=dict(
+                range=[1700, datetime.now().year]  # Set x-axis range from 1700 to the current year
+            )
+        )
+
+        # Step 7: Display the figure
+        time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
+
+        return render_template('antarctic.html', time_html=time_html)
+    except Exception as e:
+        logger.error(f"Error in antarctic route: {e}")
+        return "An error occurred while processing the request", 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
