@@ -148,7 +148,7 @@ def process_data():
 
         # Check if required columns are present
         missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
+        if (missing_columns):
             error_msg = f"Missing columns in data: {missing_columns}"
             logger.error(error_msg)
             raise KeyError(error_msg)
@@ -485,6 +485,11 @@ def antarctic():
         # Step 1: Fetch data from NASA's Antarctic Meteorite API
         api_url = "https://astromaterials.jsc.nasa.gov/antmet/api/index.cfm"
         response = requests.get(api_url)
+        
+        # Handle empty or invalid response
+        if response.status_code != 200 or not response.content:
+            raise ValueError("Invalid response from API")
+        
         data = response.json()
 
         # Step 2: Convert data to a DataFrame
@@ -526,7 +531,10 @@ def antarctic():
         # Step 7: Display the figure
         time_html = fig_time.to_html(full_html=False, include_plotlyjs='cdn', div_id='time')
 
-        return render_template('antarctic.html', time_html=time_html)
+        # Create additional visualizations
+        radial_html, map_html, heatmap_html = create_visualizations(df)[0], create_visualizations(df)[2], create_visualizations(df)[3]
+
+        return render_template('antarctic.html', time_html=time_html, radial_html=radial_html, map_html=map_html, heatmap_html=heatmap_html)
     except Exception as e:
         logger.error(f"Error in antarctic route: {e}")
         return "An error occurred while processing the request", 500
